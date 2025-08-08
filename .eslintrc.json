@@ -1,0 +1,4 @@
+{
+   "extends": "@silvermine/eslint-config/node",
+   "ignorePatterns": ["dist"]
+}
