@@ -5,4 +5,5 @@ export const mockVideoJs: VideoJs = {
    log: vi.fn(),
    registerPlugin: vi.fn(),
    getPlugin: vi.fn(),
+   hook: vi.fn(),
 } as unknown as VideoJs;

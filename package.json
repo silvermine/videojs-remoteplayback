@@ -2,7 +2,20 @@
   "name": "@silvermine/videojs-remoteplayback",
   "version": "0.0.1",
   "description": "videojs plugin for casting to chromecast and airplay",
-  "main": "src/index.ts",
+  "main": "dist/videojs-remoteplayback.umd.js",
+  "module": "dist/videojs-remoteplayback.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/videojs-remoteplayback.mjs",
+      "require": "./dist/videojs-remoteplayback.umd.js"
+    },
+    "./dist/videojs-remoteplayback.css": "./dist/videojs-remoteplayback.css"
+  },
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "vite build",
     "test": "vitest run",
@@ -43,11 +56,13 @@
     "@types/video.js": "7.3.58",
     "@vitest/ui": "3.2.4",
     "jsdom": "26.1.0",
+    "sass": "^1.77.0",
     "typescript": "5.9.2",
     "vite": "6.3.6",
+    "vite-plugin-dts": "^4.5.4",
     "vitest": "3.2.4"
   },
-  "dependencies": {
+  "peerDependencies": {
     "@silvermine/video.js": "7.19.0-1"
   }
 }
