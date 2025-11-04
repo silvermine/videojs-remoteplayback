@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chromecast Test - Video.js Remote Playback Plugin</title>
+    <!-- Video.js CSS from CDN for dev server -->
+    <link href="https://vjs.zencdn.net/7.19.0/video-js.css" rel="stylesheet">
+    <!-- Plugin CSS served from dist -->
+    <link href="/videojs-remoteplayback.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .info {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .video-container {
+            margin: 20px 0;
+        }
+        .status {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <a href="./index.html" class="back-link">← Back to Examples</a>
+    
+    <h1>📺 Chromecast Test</h1>
+    
+    <div class="info">
+        <h3>🔍 Testing Instructions</h3>
+        <ul>
+            <li><strong>Browser:</strong> Use Chrome browser for Chromecast support</li>
+            <li><strong>Network:</strong> Ensure your Chromecast device is on the same network</li>
+            <li><strong>Expected:</strong> Chromecast button should appear in the control bar</li>
+            <li><strong>Click:</strong> Button should show available Chromecast devices</li>
+        </ul>
+    </div>
+
+    <div class="video-container">
+        <video
+            id="chromecast-test-player"
+            class="video-js vjs-default-skin"
+            controls
+            preload="auto"
+            width="640"
+            height="360"
+            data-setup="{}">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            <p class="vjs-no-js">
+                To view this video please enable JavaScript, and consider upgrading to a web browser that
+                <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>.
+            </p>
+        </video>
+    </div>
+
+    <div class="status" id="status">
+        Status: Initializing...
+    </div>
+
+    <!-- Video.js from CDN for dev server -->
+    <script src="https://vjs.zencdn.net/7.19.0/video.min.js"></script>
+    <!-- Plugin JS served from dist -->
+    <script src="/videojs-remoteplayback.umd.js"></script>
+    <script>
+        const statusEl = document.getElementById('status');
+        
+        function updateStatus(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#d32f2f' : type === 'success' ? '#388e3c' : '#1976d2';
+            statusEl.innerHTML = `<span style="color: ${color}">[${timestamp}] ${message}</span>`;
+            console.log(`${type.toUpperCase()}: ${message}`);
+        }
+
+        // Debug: Check what's available
+        updateStatus('Checking available globals...');
+        console.log('🔍 Available globals:', Object.keys(window).filter(key => key.includes('Video')));
+        console.log('🔍 VideoJsRemotePlayback:', typeof VideoJsRemotePlayback);
+        
+        // Initialize the plugin
+        if (typeof VideoJsRemotePlayback === 'function') {
+            VideoJsRemotePlayback(videojs);
+            updateStatus('Plugin initialized successfully', 'success');
+        } else {
+            updateStatus('❌ VideoJsRemotePlayback is not available as a global function', 'error');
+        }
+        
+        // Create the player
+        const player = videojs('chromecast-test-player', {
+            fluid: true,
+            responsive: true
+        });
+
+        // Monitor Chromecast events
+        player.ready(() => {
+            updateStatus('Player ready, checking for Chromecast button...');
+            
+            setTimeout(() => {
+                const chromecastButton = document.querySelector('.vjs-chromecast-button');
+                if (chromecastButton) {
+                    updateStatus('✅ Chromecast button found!', 'success');
+                    
+                    chromecastButton.addEventListener('click', () => {
+                        updateStatus('🎯 Chromecast button clicked!');
+                        console.log('🔍 Player chromecast manager:', player.chromecast);
+                    });
+                } else {
+                    updateStatus('ℹ️ Chromecast button not found (normal for non-Chrome browsers)');
+                }
+            }, 200);
+        });
+
+        // Listen for Chromecast events
+        player.on('chromecast:connecting', () => {
+            updateStatus('🔄 Connecting to Chromecast...', 'info');
+        });
+
+        player.on('chromecast:connected', () => {
+            updateStatus('✅ Connected to Chromecast!', 'success');
+        });
+
+        player.on('chromecast:disconnected', () => {
+            updateStatus('📱 Disconnected from Chromecast', 'info');
+        });
+
+        // Check browser compatibility
+        const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+        if (!isChrome) {
+            updateStatus('⚠️ Not Chrome browser - Chromecast button may not appear', 'error');
+        } else {
+            updateStatus('✅ Chrome browser detected - Chromecast should be available', 'success');
+        }
+    </script>
+</body>
+</html>

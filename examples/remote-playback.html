@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Playback API Test - Video.js Remote Playback Plugin</title>
+    <!-- Video.js CSS from CDN for dev server -->
+    <link href="https://vjs.zencdn.net/7.19.0/video-js.css" rel="stylesheet">
+    <!-- Plugin CSS served from dist -->
+    <link href="/videojs-remoteplayback.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .info {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .video-container {
+            margin: 20px 0;
+        }
+        .api-info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .status-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        .status-card h4 {
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <a href="./index.html" class="back-link">← Back to Examples</a>
+    
+    <h1>🔄 Remote Playback API Test</h1>
+    
+    <div class="info">
+        <h3>🔍 Testing Instructions</h3>
+        <ul>
+            <li><strong>Cross-Browser:</strong> Test the generic Remote Playback API across different browsers</li>
+            <li><strong>Safari:</strong> Should show AirPlay devices (Apple ecosystem)</li>
+            <li><strong>Chrome:</strong> Should show Chromecast devices (Google ecosystem)</li>
+            <li><strong>Other Browsers:</strong> May not support Remote Playback API</li>
+        </ul>
+    </div>
+
+    <div class="video-container">
+        <video
+            id="remote-playback-test-player"
+            class="video-js vjs-default-skin vjs-fluid"
+            controls
+            preload="auto"
+            width="640"
+            height="360"
+            data-setup="{}">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            <p class="vjs-no-js">
+                To view this video please enable JavaScript, and consider upgrading to a web browser that
+                <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>.
+            </p>
+        </video>
+    </div>
+
+    <div class="status-grid">
+        <div class="status-card">
+            <h4>🌐 Browser Support</h4>
+            <div id="browser-info">Checking...</div>
+        </div>
+        <div class="status-card">
+            <h4>📡 API Availability</h4>
+            <div id="api-info">Checking...</div>
+        </div>
+    </div>
+
+    <div class="api-info" id="detailed-info">
+        <strong>Detailed API Information:</strong><br>
+        Loading...
+    </div>
+
+    <!-- Video.js from CDN for dev server -->
+    <script src="https://vjs.zencdn.net/7.19.0/video.min.js"></script>
+    <!-- Plugin JS served from dist -->
+    <script src="/videojs-remoteplayback.umd.js"></script>
+    <script>
+        const browserInfoEl = document.getElementById('browser-info');
+        const apiInfoEl = document.getElementById('api-info');
+        const detailedInfoEl = document.getElementById('detailed-info');
+        
+        function updateInfo() {
+            // Browser detection
+            const userAgent = navigator.userAgent;
+            const isChrome = /Chrome/.test(userAgent) && /Google Inc/.test(navigator.vendor);
+            const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+            const isFirefox = /Firefox/.test(userAgent);
+            const isEdge = /Edg/.test(userAgent);
+            
+            let browserName = 'Unknown';
+            if (isChrome) browserName = 'Chrome';
+            else if (isSafari) browserName = 'Safari';
+            else if (isFirefox) browserName = 'Firefox';
+            else if (isEdge) browserName = 'Edge';
+            
+            browserInfoEl.innerHTML = `
+                <strong>${browserName}</strong><br>
+                Expected: ${isChrome ? 'Chromecast' : isSafari ? 'AirPlay' : 'No support'}
+            `;
+            
+            // API availability
+            const hasRemotePlayback = 'remote' in HTMLVideoElement.prototype;
+            const hasWebKitAirPlay = 'webkitShowPlaybackTargetPicker' in HTMLVideoElement.prototype;
+            
+            apiInfoEl.innerHTML = `
+                Remote Playback API: ${hasRemotePlayback ? '✅' : '❌'}<br>
+                WebKit AirPlay API: ${hasWebKitAirPlay ? '✅' : '❌'}
+            `;
+            
+            // Detailed information
+            detailedInfoEl.innerHTML = `
+                <strong>Detailed API Information:</strong><br>
+                User Agent: ${userAgent}<br>
+                Remote Playback API: ${hasRemotePlayback}<br>
+                WebKit AirPlay API: ${hasWebKitAirPlay}<br>
+                WebKitPlaybackTargetAvailabilityEvent: ${'WebKitPlaybackTargetAvailabilityEvent' in window}<br>
+                Expected Button: ${(hasRemotePlayback && isChrome) ? 'Chromecast' : (hasWebKitAirPlay && isSafari) ? 'AirPlay' : 'None'}
+            `;
+        }
+        
+        updateInfo();
+
+        // Debug: Check what's available
+        console.log('🔍 Available globals:', Object.keys(window).filter(key => key.includes('Video')));
+        console.log('🔍 VideoJsRemotePlayback:', typeof VideoJsRemotePlayback);
+        
+        // Initialize the plugin
+        if (typeof VideoJsRemotePlayback === 'function') {
+            VideoJsRemotePlayback(videojs);
+            console.log('✅ Plugin initialized successfully');
+        } else {
+            console.error('❌ VideoJsRemotePlayback is not available as a global function');
+        }
+        
+        // Create the player
+        const player = videojs('remote-playback-test-player', {
+            fluid: true,
+            responsive: true
+        });
+
+        // Monitor remote playback events
+        player.ready(() => {
+            console.log('Player ready, checking for remote playback buttons...');
+            
+            setTimeout(() => {
+                const airplayButton = document.querySelector('.vjs-airplay-button');
+                const chromecastButton = document.querySelector('.vjs-chromecast-button');
+                
+                if (airplayButton) {
+                    console.log('✅ AirPlay button found!');
+                    detailedInfoEl.innerHTML += '<br><strong>Result:</strong> AirPlay button detected';
+                }
+                
+                if (chromecastButton) {
+                    console.log('✅ Chromecast button found!');
+                    detailedInfoEl.innerHTML += '<br><strong>Result:</strong> Chromecast button detected';
+                }
+                
+                if (!airplayButton && !chromecastButton) {
+                    console.log('ℹ️ No remote playback buttons found');
+                    detailedInfoEl.innerHTML += '<br><strong>Result:</strong> No remote playback buttons (expected for unsupported browsers)';
+                }
+            }, 200);
+        });
+
+        // Listen for all remote playback events
+        ['remoteplayback:available', 'remoteplayback:unavailable', 
+         'airplay:connecting', 'airplay:connected', 'airplay:disconnected',
+         'chromecast:connecting', 'chromecast:connected', 'chromecast:disconnected'].forEach(event => {
+            player.on(event, () => {
+                console.log(`🎯 Event: ${event}`);
+                detailedInfoEl.innerHTML += `<br>Event: ${event} (${new Date().toLocaleTimeString()})`;
+            });
+        });
+    </script>
+</body>
+</html>
