@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import initializePlugin from '../src/index';
+import initializePlugin from '../src/js';
 import { mockVideoJs } from './mocks/video-js-mock';
 
 describe('Remote Playback Plugin', () => {
@@ -10,7 +10,6 @@ describe('Remote Playback Plugin', () => {
 
       expect(initFunction).not.toThrow();
 
-      expect(mockVideoJs.log)
-         .toHaveBeenCalledWith('init remote playback plugin');
+      expect(mockVideoJs.registerPlugin).toHaveBeenCalled();
    });
 });
