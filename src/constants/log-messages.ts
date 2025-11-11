@@ -8,6 +8,11 @@ export const LOG_MESSAGES = {
    AIRPLAY_SUPPORTED: 'AirPlay support detected',
    WEBKIT_AIRPLAY_SUPPORTED: 'WebKit AirPlay API supported - full device compatibility',
    WEBKIT_AIRPLAY_PREFERRED: 'Using WebKit AirPlay API for full device list',
+   CHROMECAST_NOT_SUPPORTED: 'Chromecast not supported on this device',
+   CHROMECAST_SUPPORTED: 'Chromecast support detected',
+   GOOGLE_CAST_SUPPORTED: 'Google Cast API supported - full device compatibility',
+   GOOGLE_CAST_PREFERRED: 'Using Google Cast API for full device list',
+   CHROMECAST_PICKER_OPENED: 'Chromecast picker opened successfully',
    CONTROL_BAR_NOT_FOUND: 'Control bar not found',
    PICKER_OPENED: 'Remote playback picker opened successfully',
 } as const;

@@ -2,12 +2,14 @@ import videojs from '@silvermine/video.js';
 import type { VideoJsPlayer as VjsPlayer } from 'video.js';
 import type { AirPlayManager } from '../src/js/airplay/interfaces/Airplay.interfaces';
 import type { RemotePlaybackPlugin } from '../src/RemotePlaybackPlugin';
+import type { ChromecastManager } from '../src/js/chromecast/ChromecastManager';
 
 export type VideoJs = typeof videojs;
 
 export interface VideoJsPlayer extends VjsPlayer {
    airPlay?: AirPlayManager;
    remotePlayback?: RemotePlaybackPlugin;
+   chromecast?: ChromecastManager;
 }
 
 /**
