@@ -19,6 +19,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite --config vite.dev.config.ts",
+    "dev:build": "npm run build && npm run dev",
     "test": "vitest run",
     "check-node-version": "check-node-version --node $(cat .nvmrc) --npm 10.5.0 --print",
     "stylelint": "stylelint './styles/**/*.scss'",

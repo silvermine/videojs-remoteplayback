@@ -5,7 +5,12 @@ export default defineConfig({
    server: {
       port: 3000,
       open: true,
+      fs: {
+         // Allow serving files from parent directory
+         allow: [ '..' ],
+      },
    },
+   // Serve dist files at root path (makes /videojs-remoteplayback.* available)
    publicDir: '../dist',
    build: {
       outDir: '../dev-dist',
