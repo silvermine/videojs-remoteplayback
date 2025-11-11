@@ -16,7 +16,7 @@ const CSS_CLASSES = {
    CONTROL_TEXT: 'vjs-control-text',
 } as const;
 
-export const COMPONENT_NAMES = {
+export const AIRPLAY_COMPONENT_NAMES = {
    AIRPLAY_BUTTON: 'AirPlayButton',
    CONTROL_BAR: 'controlBar',
    FULLSCREEN_TOGGLE: 'fullscreenToggle',
@@ -88,10 +88,14 @@ export class AirPlayButton extends Button {
 
 
    private _initialize(options: AirPlayButtonOptions): void {
+      // Start with button hidden. Only show when we know devices are available.
+      // This prevents showing a non-functional button on browsers with the API
+      // but no actual AirPlay devices available.
+      this.hide();
+
       if (checkClientAirPlaySupport()) {
          videojs.log(LOG_MESSAGES.AIRPLAY_SUPPORTED);
       } else {
-         this.hide();
          videojs.log(LOG_MESSAGES.AIRPLAY_NOT_SUPPORTED);
       }
 
@@ -130,30 +134,34 @@ export class AirPlayButton extends Button {
     * hiding when it is not), independent of higher-level plugin events.
     */
    private _setupDirectAPIListeners(): void {
-      const videoElement = getVideoElement(this._player);
-
-      if (!videoElement || !checkClientAirPlaySupport()) {
+      if (!checkClientAirPlaySupport()) {
          return;
       }
 
-      const onAvailabilityChange = (event: Event): void => {
-         const remoteEvent = event as RemotePlaybackAvailabilityEvent;
+      this._player.one('loadstart', () => {
+         const videoElement = getAirPlayVideoElement(this._player);
 
-         if (remoteEvent.availability === AVAILABILITY_STATES.AVAILABLE) {
-            this.show();
-         } else {
-            this.hide();
+         if (!videoElement) {
+            return;
          }
-      };
 
-      if (checkClientRemotePlaybackSupport()) {
-         videoElement.remote.addEventListener('availabilitychange', onAvailabilityChange);
-         this.on('dispose', () => {
-            if (videoElement.remote) {
-               videoElement.remote.removeEventListener('availabilitychange', onAvailabilityChange);
+         const onAvailabilityChange = (event: Event): void => {
+            const remoteEvent = event as RemotePlaybackAvailabilityEvent;
+
+            if (remoteEvent.availability === AVAILABILITY_STATES.AVAILABLE) {
+               this.show();
+            } else {
+               this.hide();
             }
-         });
-      }
+         };
+
+         if (checkClientRemotePlaybackSupport()) {
+            videoElement.remote.addEventListener('availabilitychange', onAvailabilityChange);
+            this.on('dispose', () => {
+               videoElement.remote?.removeEventListener('availabilitychange', onAvailabilityChange);
+            });
+         }
+      });
    }
 
    /**
@@ -180,4 +188,4 @@ export class AirPlayButton extends Button {
    }
 }
 
-videojs.registerComponent(COMPONENT_NAMES.AIRPLAY_BUTTON, AirPlayButton);
+videojs.registerComponent(AIRPLAY_COMPONENT_NAMES.AIRPLAY_BUTTON, AirPlayButton);

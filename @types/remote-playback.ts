@@ -5,7 +5,7 @@ export interface RemotePlaybackAvailabilityEvent extends Event {
 }
 
 export interface RemotePlaybackPluginOptions {
-   addAirPlayLabelToButton?: boolean;
+   addLabelToButton?: boolean;
 }
 
 export interface WebKitPlaybackTargetAvailabilityEvent extends Event {

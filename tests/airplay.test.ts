@@ -8,7 +8,6 @@ describe('AirPlayManager', () => {
        airPlayManager: AirPlayManager;
 
    beforeEach(() => {
-      // Mock browser APIs for AirPlay detection
       Object.defineProperty(HTMLVideoElement.prototype, 'remote', {
          value: {},
          writable: true,
@@ -52,6 +51,7 @@ describe('AirPlayManager', () => {
       } as unknown as VideoJsPlayer;
 
       airPlayManager = new AirPlayManager(mockPlayer);
+      airPlayManager.initialize(); // ← call initialize so _remotePlayback and _webkitAirPlaySupported are set up
    });
 
    it('should initialize without errors', () => {
@@ -76,11 +76,9 @@ describe('AirPlayManager', () => {
    });
 
    it('should return current state', () => {
-      // Get the video element
       const videoEl = getVideoElement(mockPlayer);
 
       if (videoEl) {
-         // set its remote state
          (videoEl.remote as any).state = 'connected';
       }
 
@@ -90,13 +88,11 @@ describe('AirPlayManager', () => {
    });
 
    it('should return connection status', () => {
-      // Get the video element
       const videoEl = getVideoElement(mockPlayer);
 
       expect(videoEl).not.toBeNull();
 
       if (videoEl) {
-         // set its remote state
          (videoEl.remote as any).state = 'connected';
       }
 

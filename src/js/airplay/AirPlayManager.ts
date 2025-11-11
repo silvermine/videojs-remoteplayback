@@ -7,20 +7,20 @@ import type {
 import videojs from '@silvermine/video.js';
 import { LOG_MESSAGES } from '../constants/log-messages';
 import { EVENTS } from '../constants/remote-playback';
+import { RemotePlaybackStrategy } from '../RemotePlaybackPlugin';
 
 export function checkClientAirPlaySupport(): boolean {
    if (typeof window === 'undefined') {
       return false;
    }
 
-   const hasPickerMethod = 'HTMLVideoElement' in window && 'webkitShowPlaybackTargetPicker' in HTMLVideoElement.prototype,
-         hasAvailabilityEvent = 'WebKitPlaybackTargetAvailabilityEvent' in window;
-
-   return hasPickerMethod || hasAvailabilityEvent;
+   return 'WebKitPlaybackTargetAvailabilityEvent' in window;
 }
 
 export function isVideoElementWithAirPlay(el: Element | null): el is HTMLVideoElementWithAirPlay {
-   return !!el && el instanceof HTMLVideoElement && 'webkitShowPlaybackTargetPicker' in el &&
+   return !!el &&
+      el instanceof HTMLVideoElement &&
+      'webkitShowPlaybackTargetPicker' in el &&
       'webkitCurrentPlaybackTargetIsWireless' in el &&
       'remote' in el;
 }
@@ -51,14 +51,47 @@ export function getVideoElement(player: VideoJsPlayer): HTMLVideoElementWithAirP
  * - Listen to low-level API events and re-emit them as high-level
  *   `EVENTS.AIRPLAY.*` events on the Video.js player.
  */
-export class AirPlayManager {
+export class AirPlayManager implements RemotePlaybackStrategy {
    private readonly _player: VideoJsPlayer;
    private _remotePlayback: RemotePlayback | null = null;
    private _webkitAirPlaySupported = false;
 
    public constructor(player: VideoJsPlayer) {
       this._player = player;
-      this._initialize();
+   }
+
+   /**
+    * Initialize the AirPlay manager.
+    *
+    * Called by the plugin after the player is ready and the video element
+    * exists in the DOM. Sets up the RemotePlayback reference, WebKit AirPlay
+    * support flag, and event listeners.
+    */
+   public initialize(): void {
+      // Only proceed if the browser supports AirPlay
+      if (!checkClientAirPlaySupport()) {
+         videojs.log(LOG_MESSAGES.AIRPLAY_NOT_SUPPORTED);
+         return;
+      }
+
+      // Browser supports AirPlay, now check if video element exists
+      const videoElement = getAirPlayVideoElement(this._player);
+
+      if (!videoElement) {
+         videojs.log.error('AirPlay: Video element not found');
+         return;
+      }
+
+      this._remotePlayback = videoElement.remote || null;
+      this._webkitAirPlaySupported = true;
+      videojs.log('Remote Playback API initialized');
+      videojs.log(LOG_MESSAGES.WEBKIT_AIRPLAY_SUPPORTED);
+      this._setupEventListeners();
+      this._setupWebKitEventListeners(videoElement);
+   }
+
+   public async isAvailable(): Promise<boolean> {
+      return await this.isAirPlayAvailable();
    }
 
    public async isAirPlayAvailable(): Promise<boolean> {
@@ -124,26 +157,18 @@ export class AirPlayManager {
       throw new Error('No AirPlay API available');
    }
 
-   private _initialize(): void {
-      const videoElement = getVideoElement(this._player);
-
-      if (!videoElement) {
-         videojs.log.error('Video element not found');
-         return;
-      }
-
-      if (checkClientAirPlaySupport()) {
-         this._remotePlayback = videoElement.remote || null;
-         this._webkitAirPlaySupported = true;
-         videojs.log('Remote Playback API initialized');
-         videojs.log(LOG_MESSAGES.WEBKIT_AIRPLAY_SUPPORTED);
-      }
-
-      this._setupEventListeners();
-
-      if (this._webkitAirPlaySupported) {
-         this._setupWebKitEventListeners();
-      }
+   /**
+    * Clean up resources and event listeners.
+    *
+    * Should be called when the AirPlayManager is no longer needed.
+    *
+    * Note: The Remote Playback API does not currently provide a way to remove
+    * event listeners, so we rely on garbage collection to clean up the
+    * listeners when the RemotePlayback object is dereferenced.
+    */
+   public dispose(): void {
+      this._remotePlayback = null;
+      videojs.log('AirPlayManager disposed');
    }
 
    private _checkWebKitAirPlayAvailability(): boolean {
@@ -153,15 +178,12 @@ export class AirPlayManager {
          return false;
       }
 
-      const onAvailabilityChange = (event: Event): void => {
-         // This is a safe assertion since we know this is a webkit event
+      videoElement.addEventListener('webkitplaybacktargetavailabilitychanged', (event: Event) => {
          const webkitEvent = event as WebKitPlaybackTargetAvailabilityEvent,
                available = webkitEvent.availability === 'available';
 
          this._player.trigger(EVENTS.AIRPLAY.AVAILABILITY_CHANGE, { available });
-      };
-
-      videoElement.addEventListener('webkitplaybacktargetavailabilitychanged', onAvailabilityChange);
+      });
 
       return true;
    }
@@ -173,19 +195,21 @@ export class AirPlayManager {
     * to connect / connecting / disconnect transitions.
     */
    private _setupEventListeners(): void {
-      if (this._remotePlayback) {
-         this._remotePlayback.addEventListener('connect', () => {
-            this._player.trigger(EVENTS.AIRPLAY.CONNECTED);
-         });
-
-         this._remotePlayback.addEventListener('connecting', () => {
-            this._player.trigger(EVENTS.AIRPLAY.CONNECTING);
-         });
-
-         this._remotePlayback.addEventListener('disconnect', () => {
-            this._player.trigger(EVENTS.AIRPLAY.DISCONNECTED);
-         });
+      if (!this._remotePlayback) {
+         return;
       }
+
+      this._remotePlayback.addEventListener('connect', () => {
+         this._player.trigger(EVENTS.AIRPLAY.CONNECTED);
+      });
+
+      this._remotePlayback.addEventListener('connecting', () => {
+         this._player.trigger(EVENTS.AIRPLAY.CONNECTING);
+      });
+
+      this._remotePlayback.addEventListener('disconnect', () => {
+         this._player.trigger(EVENTS.AIRPLAY.DISCONNECTED);
+      });
    }
 
    /**
@@ -194,22 +218,14 @@ export class AirPlayManager {
     * player. This covers Safari / Apple devices where WebKit exposes
     * `webkitcurrentplaybacktargetiswirelesschanged`.
     */
-   private _setupWebKitEventListeners(): void {
-      const videoElement = getVideoElement(this._player);
-
-      if (!videoElement) {
-         return;
-      }
-
-      const onPlaybackTargetChange = (): void => {
+   private _setupWebKitEventListeners(videoElement: HTMLVideoElementWithAirPlay): void {
+      videoElement.addEventListener('webkitcurrentplaybacktargetiswirelesschanged', () => {
          if (videoElement.webkitCurrentPlaybackTargetIsWireless) {
             this._player.trigger(EVENTS.AIRPLAY.CONNECTED);
          } else {
             this._player.trigger(EVENTS.AIRPLAY.DISCONNECTED);
          }
-      };
-
-      videoElement.addEventListener('webkitcurrentplaybacktargetiswirelesschanged', onPlaybackTargetChange);
+      });
    }
 }
 

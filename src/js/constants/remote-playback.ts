@@ -9,6 +9,12 @@ export const EVENTS = {
       CONNECTED: 'airplay:connected',
       DISCONNECTED: 'airplay:disconnected',
    },
+   CHROMECAST: {
+      AVAILABILITY_CHANGE: 'chromecast:availabilitychange',
+      CONNECTING: 'chromecast:connecting',
+      CONNECTED: 'chromecast:connected',
+      DISCONNECTED: 'chromecast:disconnected',
+   },
 } as const;
 
 export const AVAILABILITY_STATES = {

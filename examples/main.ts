@@ -2,11 +2,13 @@ import videojs from '@silvermine/video.js';
 import initializePlugin from '../src/js/index';
 import { isPlayerWithRemotePlaybackPlugin } from '../src/js/RemotePlaybackPlugin';
 import '@silvermine/video.js/dist/video-js.css';
+import '../src/styles/airplay.scss';
+import '../src/styles/chromecast.scss';
 
 initializePlugin(videojs);
 
 
-const player = videojs('airplay-test-player');
+const player = videojs('test-player');
 
 if (isPlayerWithRemotePlaybackPlugin(player)) {
    player.remotePlayback();
