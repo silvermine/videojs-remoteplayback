@@ -9,12 +9,15 @@ import { LOG_MESSAGES } from './constants/log-messages';
 class RemotePlaybackPlugin {
    private readonly _player: VideoJsPlayer;
    private readonly _airPlayManager: AirPlayManager;
+   private readonly _chromecastManager: ChromecastManager;
 
    public constructor(player: VideoJsPlayer) {
       this._player = player;
       this._airPlayManager = new AirPlayManager(player);
+      this._chromecastManager = new ChromecastManager(player);
 
       this._player.airPlay = this._airPlayManager;
+      this._player.chromecast = this._chromecastManager;
 
       this._initialize();
    }
@@ -28,20 +31,20 @@ class RemotePlaybackPlugin {
    }
 
    private _initialize(): void {
-      this._addAirPlayButton();
+      this._addRemotePlaybackButtons();
       this._checkAvailability();
    }
 
-   private _addAirPlayButton(): void {
-      logInfo('Initializing AirPlay button...');
+   private _addRemotePlaybackButtons(): void {
+      logInfo('Initializing remote playback buttons...');
 
       this._player.ready(() => {
          logInfo(LOG_MESSAGES.PLAYER_READY);
-         this._addButtonToControlBar();
+         this._addButtonsToControlBar();
       });
    }
 
-   private _addButtonToControlBar(): void {
+   private _addButtonsToControlBar(): void {
       const controlBar = this._player.getChild(COMPONENT_NAMES.CONTROL_BAR);
 
       if (!controlBar) {
@@ -49,19 +52,30 @@ class RemotePlaybackPlugin {
          return;
       }
 
+      // Add AirPlay button
       try {
-         const airPlayButton = new AirPlayButton(this._player, { addAirPlayLabelToButton: true });
+         const airPlayButton = new AirPlayButton(this._player, { addAirPlayLabelToButton: false });
 
-         logInfo(LOG_MESSAGES.BUTTON_CREATED);
-
+         logInfo('AirPlay button created successfully');
          this._insertButtonInControlBar(controlBar, airPlayButton);
-         logInfo(LOG_MESSAGES.BUTTON_ADDED);
+         logInfo('AirPlay button added to control bar');
       } catch(error) {
          logError('Failed to create or add AirPlay button', error);
       }
+
+      // Add Chromecast button
+      try {
+         const chromecastButton = new ChromecastButton(this._player, { addChromecastLabelToButton: false });
+
+         logInfo('Chromecast button created successfully');
+         this._insertButtonInControlBar(controlBar, chromecastButton);
+         logInfo('Chromecast button added to control bar');
+      } catch(error) {
+         logError('Failed to create or add Chromecast button', error);
+      }
    }
 
-   private _insertButtonInControlBar(controlBar: unknown, airPlayButton: AirPlayButton): void {
+   private _insertButtonInControlBar(controlBar: unknown, button: AirPlayButton | ChromecastButton): void {
       const fullscreenToggle = (controlBar as { getChild: (name: string) => unknown }).getChild(COMPONENT_NAMES.FULLSCREEN_TOGGLE);
 
       if (fullscreenToggle) {
@@ -70,17 +84,19 @@ class RemotePlaybackPlugin {
          const insertIndex = children.indexOf(fullscreenToggle);
 
          (controlBar as { addChild: (component: unknown, options?: Record<string, unknown>, index?: number) => void })
-            .addChild(airPlayButton, {}, insertIndex);
+            .addChild(button, {}, insertIndex);
       } else {
-         (controlBar as { addChild: (component: unknown) => void }).addChild(airPlayButton);
+         (controlBar as { addChild: (component: unknown) => void }).addChild(button);
       }
    }
 
    private async _checkAvailability(): Promise<void> {
       try {
-         const available = await this._airPlayManager.isAvailable();
+         const airPlayAvailable = await this._airPlayManager.isAvailable();
 
-         if (available) {
+         const chromecastAvailable = await this._chromecastManager.isAvailable();
+
+         if (airPlayAvailable || chromecastAvailable) {
             this._player.trigger(EVENTS.REMOTE_PLAYBACK.AVAILABLE);
          } else {
             this._player.trigger(EVENTS.REMOTE_PLAYBACK.UNAVAILABLE);
