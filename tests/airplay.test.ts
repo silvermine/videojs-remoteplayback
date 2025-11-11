@@ -9,6 +9,13 @@ describe('AirPlayManager', () => {
        airPlayManager: AirPlayManagerType;
 
    beforeEach(() => {
+      // Mock navigator.userAgent to simulate Safari on Mac
+      Object.defineProperty(navigator, 'userAgent', {
+         value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+         writable: true,
+         configurable: true,
+      });
+
       // Mock browser APIs for AirPlay detection
       Object.defineProperty(HTMLVideoElement.prototype, 'remote', {
          value: {},

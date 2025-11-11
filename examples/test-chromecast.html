@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chromecast Test</title>
+    <link href="../node_modules/@silvermine/video.js/dist/video-js.css" rel="stylesheet">
+    <link href="../dist/videojs-remoteplayback.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .video-container {
+            margin: 20px 0;
+        }
+        .test-results {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>📺 Chromecast Test</h1>
+    
+    <div class="info">
+        <strong>Testing Chromecast functionality:</strong><br>
+        • This test works best in Chrome browser<br>
+        • Make sure you have a Chromecast device on the same network<br>
+        • Look for the Chromecast button in the video player controls<br>
+        • Click the button to test casting functionality<br>
+        • If you see "No devices found" error, that's normal when no Chromecast is available<br>
+        • Check the browser console for detailed logs
+    </div>
+
+    <div class="video-container">
+        <video
+            id="chromecast-test-player"
+            class="video-js vjs-default-skin"
+            controls
+            preload="auto"
+            width="640"
+            height="360"
+            data-setup="{}">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            <p class="vjs-no-js">
+                To view this video please enable JavaScript, and consider upgrading to a web browser that
+                <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>.
+            </p>
+        </video>
+    </div>
+
+    <div class="test-results" id="test-results">
+        Loading test results...
+    </div>
+
+    <script src="../node_modules/@silvermine/video.js/dist/video.min.js"></script>
+    <script src="../dist/videojs-remoteplayback.umd.js"></script>
+    <script>
+        VideoJsRemotePlayback(videojs);
+    </script>
+</body>
+</html>
