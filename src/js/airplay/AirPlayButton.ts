@@ -5,11 +5,11 @@ import { AirPlayButtonOptions } from './interfaces/Airplay.interfaces';
 import { logError, logInfo } from '../../lib/logging';
 import { getMediaElement } from '../../lib/get-media-element';
 import { hasAirPlaySupport } from './lib/hasAirplaySupport';
-import { hasRemotePlaybackSupport } from './lib/hasRemotePlaybackSupport';
 import { CSS_CLASSES } from './constants/css-classes';
 import { COMPONENT_NAMES } from './constants/component-names';
 import { LOG_MESSAGES } from '../../constants/log-messages';
 import { AVAILABILITY_STATES, EVENTS } from '../../constants/remote-playback';
+import { hasRemotePlaybackSupport } from '../../lib/hasRemotePlaybackSupport';
 
 class AirPlayButton extends videojs.getComponent('Button') {
    private readonly _player: VideoJsPlayer;
