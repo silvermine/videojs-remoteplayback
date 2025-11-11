@@ -1,0 +1,45 @@
+$icon-chromecast--default: '../assets/ic_cast_white_24px.svg' !default;
+$icon-chromecast--hover: '../assets/ic_cast_white_connected.svg' !default;
+
+$chromecast-icon-size: 12px !default;
+$chromecast-button-spacing: 4px !default;
+
+.vjs-chromecast-button {
+   .vjs-icon-placeholder {
+      background: url($icon-chromecast--default) center center no-repeat;
+      background-size: contain;
+      display: inline-block;
+      width: $chromecast-icon-size;
+      height: $chromecast-icon-size;
+      opacity: 1;
+   }
+   &:hover {
+      cursor: pointer;
+      .vjs-icon-placeholder {
+         background-image: url($icon-chromecast--hover);
+      }
+   }
+
+   // When label is NOT shown (default behavior), auto-size to fit icon
+   &:not(.vjs-chromecast-button-lg) {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      width: auto !important;
+      min-width: 3em;
+   }
+}
+
+.vjs-chromecast-button.vjs-chromecast-button-lg:not(.vjs-hidden) {
+   // Fits both the icon and the label on the same control
+   display: flex;
+   align-items: center;
+   width: auto;
+   padding: 0 $chromecast-button-spacing;
+
+   .vjs-chromecast-button-label {
+      margin-left: $chromecast-button-spacing;
+      flex-grow: 1;
+   }
+}
+
