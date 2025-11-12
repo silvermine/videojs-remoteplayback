@@ -1,14 +1,11 @@
-import type {
-   VideoJsPlayer,
-   RemotePlaybackState,
-} from '../types';
-import {
-   getMediaElement,
-   logInfo,
-   logError,
-} from '../utils';
-import { EVENTS, LOG_MESSAGES } from '../constants';
-import { hasChromecastSupport, hasRemotePlaybackSupport } from './Chromecast.functions';
+import type { VideoJsPlayer } from '../../../@types/videojs';
+import type { RemotePlaybackState, RemotePlayback } from '../../../@types/remote-playback';
+import { getMediaElement } from '../../lib/get-media-element';
+import { logInfo, logError } from '../../lib/logging';
+import { EVENTS } from '../../constants/remote-playback';
+import { LOG_MESSAGES } from '../../constants/log-messages';
+import { hasChromecastSupport } from './lib/hasChromecastSupport';
+import { hasRemotePlaybackSupport } from '../../lib/hasRemotePlaybackSupport';
 
 
 class ChromecastManager {
@@ -120,7 +117,7 @@ class ChromecastManager {
 
          // Start playback to enable casting
          logInfo('Starting media playback to enable Chromecast');
-         mediaEl.play().catch((playError) => {
+         mediaEl.play().catch((playError: Error) => {
             logError('Failed to start media playback', playError);
             this._isAwaitingDeviceAvailability = false;
          });

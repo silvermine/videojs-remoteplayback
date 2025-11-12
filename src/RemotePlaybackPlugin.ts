@@ -1,6 +1,8 @@
 import type { RemotePlaybackState } from '../@types/remote-playback';
 import type { VideoJsPlayer } from '../@types/videojs';
 import { AirPlayManager, AirPlayButton } from './js/airplay/AirPlayManager';
+import { ChromecastManager } from './js/chromecast/ChromecastManager';
+import { ChromecastButton } from './js/chromecast/ChromecastButton';
 import { logError, logInfo } from './lib/logging';
 import { COMPONENT_NAMES } from './js/airplay/constants/component-names';
 import { EVENTS } from './constants/remote-playback';

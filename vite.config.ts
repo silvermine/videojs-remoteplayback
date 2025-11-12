@@ -8,7 +8,7 @@ export default defineConfig({
       dts({
          insertTypesEntry: true,
          outDir: 'dist',
-         include: [ 'src/**/*' ],
+         include: [ 'src/**/*', '@types/**/*' ],
          exclude: [ 'tests/**/*', 'examples/**/*', '**/*.test.*', '**/*.spec.*' ],
          rollupTypes: true,
       }),

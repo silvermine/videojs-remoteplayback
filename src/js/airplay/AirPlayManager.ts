@@ -9,7 +9,7 @@ import { logInfo, logError } from '../../lib/logging';
 import { EVENTS } from '../../constants/remote-playback';
 import { LOG_MESSAGES } from '../../constants/log-messages';
 import { hasAirPlaySupport } from './lib/hasAirplaySupport';
-import { hasRemotePlaybackSupport } from './lib/hasRemotePlaybackSupport';
+import { hasRemotePlaybackSupport } from '../../lib/hasRemotePlaybackSupport';
 import { hasWebKitAirPlaySupport } from './lib/hasWebkitAirplaySupport';
 
 class AirPlayManager {
