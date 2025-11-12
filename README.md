@@ -24,6 +24,19 @@ for casting to external devices. This plugin bridges that gap by:
    * **Future-Proofing**: Built with modern web standards and TypeScript for
      maintainability
 
+## Development
+
+### Building the Plugin
+
+```bash
+npm run build
+```
+
+This command:
+
+1. **Compiles TypeScript**: Builds the source code using Vite
+2. **Generates Bundles**: Creates both UMD and ESM versions
+3. **Copies Assets**: Automatically copies icons from `src/images/` to `dist/images/`
 
 ## License
 

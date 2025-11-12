@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirPlay Test - Video.js Remote Playback Plugin</title>
+    <!-- Video.js CSS from CDN for dev server -->
+    <link href="https://vjs.zencdn.net/7.19.0/video-js.css" rel="stylesheet">
+    <!-- Plugin CSS served from dist -->
+    <link href="/videojs-remoteplayback.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .video-container {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="video-container">
+        <video
+            id="airplay-test-player"
+            class="video-js vjs-default-skin vjs-fluid"
+            controls
+            preload="auto"
+            width="640"
+            height="360"
+            data-setup="{}">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            <p class="vjs-no-js">
+                To view this video please enable JavaScript, and consider upgrading to a web browser that
+                <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>.
+            </p>
+        </video>
+    </div>
+
+    <!-- Video.js from CDN for dev server -->
+    <script src="https://vjs.zencdn.net/7.19.0/video.min.js"></script>
+    <!-- Plugin JS served from dist -->
+    <script src="/videojs-remoteplayback.umd.js"></script>
+    <script>
+        // Debug: Check what's available
+        console.log('🔍 Available globals:', Object.keys(window).filter(key => key.includes('Video')));
+        console.log('🔍 VideoJsRemotePlayback:', typeof VideoJsRemotePlayback);
+        
+        // Initialize the plugin
+        if (typeof VideoJsRemotePlayback === 'function') {
+            VideoJsRemotePlayback(videojs);
+        } else {
+            console.error('❌ VideoJsRemotePlayback is not available as a global function');
+        }
+        
+        // Create the player
+        const player = videojs('airplay-test-player', {
+            fluid: true,
+            responsive: true
+        });
+
+        // Add click event listener to test button functionality
+        player.ready(() => {
+            setTimeout(() => {
+                const airplayButton = document.querySelector('.vjs-airplay-button');
+                if (airplayButton) {
+                    airplayButton.addEventListener('click', () => {
+                        console.log('🎯 AirPlay button clicked!');
+                        console.log('🔍 Player airPlay manager:', player.airPlay);
+                    });
+                    console.log('✅ Added click listener to AirPlay button');
+                }
+            }, 200);
+        });
+
+        // Check for duplicate icons
+        player.ready(() => {
+            setTimeout(() => {
+                const airplayButton = player.el().querySelector('.vjs-airplay-button');
+                if (airplayButton) {
+                    const iconPlaceholders = airplayButton.querySelectorAll('.vjs-icon-placeholder');
+                    console.log('🔍 Icon placeholders found:', iconPlaceholders.length);
+                    console.log('✅ Should be exactly 1 icon placeholder');
+                    console.log('Button HTML:', airplayButton.outerHTML);
+                    
+                    if (iconPlaceholders.length === 1) {
+                        console.log('🎉 SUCCESS: Only 1 icon placeholder - duplication fixed!');
+                        
+                        // Check if using the correct SVG icon
+                        const iconStyle = window.getComputedStyle(iconPlaceholders[0]);
+                        const backgroundImage = iconStyle.backgroundImage;
+                        console.log('🔍 Background image URL:', backgroundImage);
+                        
+                        if (backgroundImage.includes('ic_airplay_white_24px.svg')) {
+                            console.log('✅ Using correct AirPlay SVG icon compiled from SCSS via Vite!');
+                            console.log('🎯 Icon is loaded from bundled images (built with the plugin)');
+                            console.log('📦 CSS compiled from styles/airplay.scss via Vite build process');
+                            
+                            // Try to determine the actual path
+                            if (backgroundImage.includes('dist/images/')) {
+                                console.log('🌐 Icon path: dist/images/ic_airplay_white_24px.svg');
+                            } else if (backgroundImage.includes('images/')) {
+                                console.log('🌐 Icon path: images/ic_airplay_white_24px.svg');
+                            }
+                        } else {
+                            console.log('⚠️ Icon might not be loading from the correct path');
+                            console.log('Background image:', backgroundImage);
+                        }
+                    } else {
+                        console.log('❌ ISSUE: Found', iconPlaceholders.length, 'icon placeholders');
+                    }
+                } else {
+                    console.log('❌ AirPlay button not found (correct for non-Safari browsers)');
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>
