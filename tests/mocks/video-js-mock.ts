@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { VideoJs } from '../../src/types';
+import { VideoJs } from '../../@types/videojs';
 
 export const mockVideoJs: VideoJs = {
    log: vi.fn(),

@@ -1,0 +1,41 @@
+$icon-airplay--default: '../assets/ic_airplay_white_24px.svg' !default;
+$icon-airplay--hover: '../assets/ic_airplay_white_24px.svg' !default;
+
+$airplay-icon-size: 12px !default;
+$airplay-button-spacing: 4px !default;
+
+.vjs-airplay-button {
+   .vjs-icon-placeholder {
+      background: url($icon-airplay--default) center center no-repeat;
+      background-size: contain;
+      display: inline-block;
+      width: $airplay-icon-size;
+      height: $airplay-icon-size;
+      opacity: 1;
+   }
+   &:hover {
+      cursor: pointer;
+      .vjs-icon-placeholder {
+         background-image: url($icon-airplay--hover);
+      }
+   }
+
+   // When label is NOT shown (default behavior), auto-size to fit icon
+   &:not(.vjs-airplay-button-lg) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+      min-width: 3em;
+   }
+}
+
+.vjs-airplay-button.vjs-airplay-button-lg:not(.vjs-hidden) {
+   display: flex;
+   align-items: center;
+   width: auto;
+
+   .vjs-airplay-button-label {
+      margin-left: $airplay-button-spacing;
+   }
+}
