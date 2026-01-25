@@ -6,7 +6,7 @@ import '@silvermine/video.js/dist/video-js.css';
 initializePlugin(videojs);
 
 
-const player = videojs('test-player');
+const player = videojs('remoteplayback-test-player');
 
 if (isPlayerWithRemotePlaybackPlugin(player)) {
    player.remotePlayback();
