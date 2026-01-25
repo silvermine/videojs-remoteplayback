@@ -25,7 +25,7 @@ export function isVideoElementWithAirPlay(el: Element | null): el is HTMLVideoEl
       'remote' in el;
 }
 
-export function getVideoElement(player: VideoJsPlayer): HTMLVideoElementWithAirPlay | null {
+export function getAirPlayVideoElement(player: VideoJsPlayer): HTMLVideoElementWithAirPlay | null {
    const videoEl = player.el().querySelector('video');
 
    if (isVideoElementWithAirPlay(videoEl)) {
@@ -137,7 +137,7 @@ export class AirPlayManager implements RemotePlaybackStrategy {
     */
    public async prompt(): Promise<void> {
       if (this._webkitAirPlaySupported) {
-         const videoElement = getVideoElement(this._player);
+         const videoElement = getAirPlayVideoElement(this._player);
 
          if (!videoElement) {
             videojs.log.error('Video element not found');
@@ -172,7 +172,7 @@ export class AirPlayManager implements RemotePlaybackStrategy {
    }
 
    private _checkWebKitAirPlayAvailability(): boolean {
-      const videoElement = getVideoElement(this._player);
+      const videoElement = getAirPlayVideoElement(this._player);
 
       if (!videoElement) {
          return false;

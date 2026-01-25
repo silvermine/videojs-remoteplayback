@@ -4,7 +4,7 @@ import type { RemotePlaybackAvailabilityEvent } from '../../../@types/remote-pla
 import { LOG_MESSAGES } from '../constants/log-messages';
 import { AVAILABILITY_STATES, EVENTS } from '../constants/remote-playback';
 import { checkClientRemotePlaybackSupport, RemotePlaybackPlugin } from '../RemotePlaybackPlugin';
-import { checkClientAirPlaySupport, getVideoElement } from './AirPlayManager';
+import { checkClientAirPlaySupport, getAirPlayVideoElement } from './AirPlayManager';
 
 const CSS_CLASSES = {
    AIRPLAY_BUTTON: 'vjs-airplay-button',
