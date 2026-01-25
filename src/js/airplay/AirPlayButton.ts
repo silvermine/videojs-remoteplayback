@@ -4,7 +4,7 @@ import type { RemotePlaybackAvailabilityEvent } from '../../../@types/remote-pla
 import { LOG_MESSAGES } from '../constants/log-messages';
 import { AVAILABILITY_STATES, EVENTS } from '../constants/remote-playback';
 import { checkClientRemotePlaybackSupport, RemotePlaybackPlugin } from '../RemotePlaybackPlugin';
-import { checkClientAirPlaySupport, getVideoElement } from './AirPlayManager';
+import { checkClientAirPlaySupport, getAirPlayVideoElement } from './AirPlayManager';
 
 const CSS_CLASSES = {
    AIRPLAY_BUTTON: 'vjs-airplay-button',
@@ -130,7 +130,7 @@ export class AirPlayButton extends Button {
     * hiding when it is not), independent of higher-level plugin events.
     */
    private _setupDirectAPIListeners(): void {
-      const videoElement = getVideoElement(this._player);
+      const videoElement = getAirPlayVideoElement(this._player);
 
       if (!videoElement || !checkClientAirPlaySupport()) {
          return;
