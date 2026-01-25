@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { VideoJsPlayer } from '../@types/videojs';
-import { AirPlayManager, getVideoElement } from '../src/js/airplay/AirPlayManager';
+import { AirPlayManager, getAirPlayVideoElement } from '../src/js/airplay/AirPlayManager';
 
 describe('AirPlayManager', () => {
    let mockPlayer: VideoJsPlayer,
@@ -77,7 +77,7 @@ describe('AirPlayManager', () => {
 
    it('should return current state', () => {
       // Get the video element
-      const videoEl = getVideoElement(mockPlayer);
+      const videoEl = getAirPlayVideoElement(mockPlayer);
 
       if (videoEl) {
          // set its remote state
@@ -91,7 +91,7 @@ describe('AirPlayManager', () => {
 
    it('should return connection status', () => {
       // Get the video element
-      const videoEl = getVideoElement(mockPlayer);
+      const videoEl = getAirPlayVideoElement(mockPlayer);
 
       expect(videoEl).not.toBeNull();
 
