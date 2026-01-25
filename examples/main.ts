@@ -8,7 +8,7 @@ import '../src/styles/chromecast.scss';
 initializePlugin(videojs);
 
 
-const player = videojs('test-player');
+const player = videojs('remoteplayback-test-player');
 
 if (isPlayerWithRemotePlaybackPlugin(player)) {
    player.remotePlayback();
