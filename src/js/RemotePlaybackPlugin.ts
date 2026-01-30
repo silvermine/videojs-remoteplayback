@@ -5,6 +5,7 @@ import videojs from '@silvermine/video.js';
 import { LOG_MESSAGES } from './constants/log-messages';
 import { COMPONENT_NAMES } from './airplay/AirPlayButton';
 import { EVENTS } from './constants/remote-playback';
+import { ChromecastButton, ChromecastManager } from './chromecast/ChromecastManager';
 
 const Plugin = videojs.getPlugin('plugin');
 
@@ -26,7 +27,7 @@ export function checkClientRemotePlaybackSupport(): boolean {
 }
 
 const defaultOptions: RemotePlaybackPluginOptions = {
-   addAirPlayLabelToButton: true,
+   addLabelToButton: true,
 };
 
 export class RemotePlaybackPlugin extends Plugin {
@@ -35,6 +36,7 @@ export class RemotePlaybackPlugin extends Plugin {
 
    private readonly _player: VideoJsPlayer;
    private readonly _airPlayManager: AirPlayManager;
+   private readonly _chromecastManager: ChromecastManager;
    private readonly _options: RemotePlaybackPluginOptions;
 
    public constructor(player: videojs.Player, options?: RemotePlaybackPluginOptions) {
@@ -44,6 +46,7 @@ export class RemotePlaybackPlugin extends Plugin {
       // at this point.
       this._player = player as VideoJsPlayer;
       this._airPlayManager = new AirPlayManager(this._player);
+      this._chromecastManager = new ChromecastManager(this._player);
       this.log('initializing Remote Playback plugin...');
 
       // Store options for later use
@@ -54,6 +57,10 @@ export class RemotePlaybackPlugin extends Plugin {
 
    public dispose(): void {
       super.dispose();
+
+      // Dispose ChromecastManager to clean up its event listeners
+      this._chromecastManager.dispose();
+
       this.log('Remote Playback plugin disposed');
    }
 
@@ -61,12 +68,16 @@ export class RemotePlaybackPlugin extends Plugin {
       return this._airPlayManager;
    }
 
+   public get chromecastManager(): ChromecastManager {
+      return this._chromecastManager;
+   }
+
    public getState(): RemotePlaybackState | null {
-      return this._airPlayManager.getState();
+      return this._airPlayManager.getState() || this._chromecastManager.getState();
    }
 
    public isConnected(): boolean {
-      return this._airPlayManager.isConnected();
+      return this._airPlayManager.isConnected() || this._chromecastManager.isConnected();
    }
 
    private _initialize(): void {
@@ -87,7 +98,9 @@ export class RemotePlaybackPlugin extends Plugin {
       }
 
       try {
-         const airPlayButton = new AirPlayButton(this._player, { addAirPlayLabelToButton: this._options.addAirPlayLabelToButton });
+         const airPlayButton = new AirPlayButton(this._player, { addAirPlayLabelToButton: this._options.addLabelToButton });
+
+         const chromecastButton = new ChromecastButton(this._player, { addChromecastLabelToButton: this._options.addLabelToButton });
 
          this.log(LOG_MESSAGES.BUTTON_CREATED);
 
@@ -99,8 +112,10 @@ export class RemotePlaybackPlugin extends Plugin {
                   insertIndex = fullscreenToggleIndex >= 0 ? fullscreenToggleIndex : children.length;
 
             controlBar.addChild(airPlayButton, {}, insertIndex);
+            controlBar.addChild(chromecastButton, {}, insertIndex);
          } else {
             controlBar.addChild(airPlayButton);
+            controlBar.addChild(chromecastButton);
          }
 
          this.log(LOG_MESSAGES.BUTTON_ADDED);
@@ -111,7 +126,11 @@ export class RemotePlaybackPlugin extends Plugin {
 
    private async _checkAvailability(): Promise<void> {
       try {
-         const available = await this._airPlayManager.isAirPlayAvailable();
+         const airPlayAvailable = await this._airPlayManager.isAirPlayAvailable();
+
+         const chromecastAvailable = await this._chromecastManager.isChromecastAvailable();
+
+         const available = airPlayAvailable || chromecastAvailable;
 
          this.log('checking remote playback availability...', available);
 
