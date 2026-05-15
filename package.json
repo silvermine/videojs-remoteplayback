@@ -26,6 +26,7 @@
       "eslint": "eslint .",
       "markdownlint": "markdownlint-cli2",
       "standards": "npm run commitlint && npm run eslint && npm run markdownlint && npm run stylelint",
+      "prepare": "npm run build",
       "release:preview": "node ./node_modules/@silvermine/standardization/scripts/release.js preview",
       "release:prep-changelog": "node ./node_modules/@silvermine/standardization/scripts/release.js prep-changelog",
       "release:finalize": "node ./node_modules/@silvermine/standardization/scripts/release.js finalize"
