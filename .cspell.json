@@ -1,0 +1,16 @@
+{
+   "language": "en",
+   "enableGlobDot": true,
+   "enableFiletypes": ["*"],
+   "useGitignore": true,
+   "dictionaryDefinitions": [
+      {
+         "name": "proj-custom-words",
+         "description": "Custom words for this project.",
+         "path": "custom-words.txt"
+      }
+   ],
+   "dictionaries": [
+      "proj-custom-words"
+   ]
+}
