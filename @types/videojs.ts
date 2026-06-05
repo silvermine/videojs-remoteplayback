@@ -1,6 +1,5 @@
 import videojs from '@silvermine/video.js';
-import type { RemotePlaybackPlugin } from '../src/js/RemotePlaybackPlugin';
-import { RemotePlaybackPluginOptions } from './remote-playback';
+import type { RemotePlaybackPlugin, RemotePlaybackPluginOptions } from '../src/js/RemotePlaybackPlugin';
 
 export type VideoJs = typeof videojs;
 

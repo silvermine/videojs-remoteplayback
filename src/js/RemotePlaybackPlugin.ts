@@ -1,12 +1,26 @@
-import type { RemotePlaybackPluginOptions, RemotePlaybackState } from '../../@types/remote-playback';
+import type { Button } from '@silvermine/video.js';
+import type { BaseButtonOptions } from './buttons/BaseButton';
 import type { VideoJsPlayer } from '../../@types/videojs';
-import { AirPlayManager, AirPlayButton } from './airplay/AirPlayManager';
 import videojs from '@silvermine/video.js';
-import { LOG_MESSAGES } from './constants/log-messages';
-import { COMPONENT_NAMES } from './airplay/AirPlayButton';
-import { EVENTS } from './constants/remote-playback';
+import { AirPlayManager } from './strategies/AirPlayManager';
+import { RemotePlaybackManager } from './strategies/RemotePlaybackManager';
+import { checkClientSupportWithAirPlay, checkClientSupport } from './lib/check-client-support';
 
-const Plugin = videojs.getPlugin('plugin');
+// INTERFACES
+
+export interface RemotePlaybackStrategy {
+   kind: 'AirPlay' | 'RemotePlaybackAPI';
+   dispose(): void;
+   makeButton(options: Partial<BaseButtonOptions>): Button | undefined;
+   prompt(): Promise<void>;
+   get player(): VideoJsPlayer;
+}
+
+export interface RemotePlaybackPluginOptions extends Partial<BaseButtonOptions> {
+   preferNativeAirPlay: boolean;
+}
+
+// TYPE GUARDS
 
 export function isPlayerWithRemotePlaybackPlugin(o: unknown): o is VideoJsPlayer {
    return typeof o === 'object' && o !== null &&
@@ -19,109 +33,80 @@ export function isPlayerWithRemotePlaybackPlugin(o: unknown): o is VideoJsPlayer
       'remotePlayback' in o && typeof o.remotePlayback === 'function';
 }
 
-export function checkClientRemotePlaybackSupport(): boolean {
-   return typeof window !== 'undefined' &&
-      'HTMLVideoElement' in window &&
-      'remote' in HTMLVideoElement.prototype;
-}
+// DEFAULTS / CONSTANTS
 
 const defaultOptions: RemotePlaybackPluginOptions = {
-   addAirPlayLabelToButton: true,
+   preferNativeAirPlay: false,
 };
 
+export const COMPONENT_NAMES = {
+   CONTROL_BAR: 'controlBar',
+   FULLSCREEN_TOGGLE: 'fullscreenToggle',
+} as const;
+
+const Plugin = videojs.getPlugin('plugin');
+
 export class RemotePlaybackPlugin extends Plugin {
-
    public readonly log!: videojs.Log;
-
    private readonly _player: VideoJsPlayer;
-   private readonly _airPlayManager: AirPlayManager;
    private readonly _options: RemotePlaybackPluginOptions;
+   private _strategy: RemotePlaybackStrategy | undefined;
 
-   public constructor(player: videojs.Player, options?: RemotePlaybackPluginOptions) {
+   public constructor(player: videojs.Player, options: Partial<RemotePlaybackPluginOptions> = {}) {
       super(player, options);
       // The constructor receives a standard Video.js Player, but then we assert the type
       // of our custom VideoJsPlayer. This is safe because the plugin has been registered
       // at this point.
       this._player = player as VideoJsPlayer;
-      this._airPlayManager = new AirPlayManager(this._player);
-      this.log('initializing Remote Playback plugin...');
-
-      // Store options for later use
       this._options = Object.assign({}, defaultOptions, options);
-
-      this._initialize();
+      this._player.ready(() => {
+         if (this._options.preferNativeAirPlay && checkClientSupportWithAirPlay()) {
+            this.log('Initializing with native AirPlay strategy.');
+            this._strategy = new AirPlayManager(this._player);
+         } else if (checkClientSupport()) {
+            this.log('Initializing with Remote Playback API strategy.');
+            this._strategy = new RemotePlaybackManager(this._player);
+         } else {
+            this.log.error('No supported strategies available!');
+            return;
+         }
+         this._addButtonToControlBar();
+      });
    }
 
    public dispose(): void {
+      this.log(`Disposing of ${this.strategy?.kind} strategy.`);
+      this.strategy?.dispose();
       super.dispose();
-      this.log('Remote Playback plugin disposed');
    }
 
-   public get airPlayManager(): AirPlayManager {
-      return this._airPlayManager;
-   }
-
-   public getState(): RemotePlaybackState | null {
-      return this._airPlayManager.getState();
-   }
-
-   public isConnected(): boolean {
-      return this._airPlayManager.isConnected();
-   }
-
-   private _initialize(): void {
-      this.log('Initializing Remote Playback plugin...');
-      this._player.ready(() => {
-         this.log(LOG_MESSAGES.PLAYER_READY);
-         this._addButtonToControlBar();
-      });
-      this._checkAvailability();
+   public get strategy(): RemotePlaybackStrategy | undefined {
+      return this._strategy;
    }
 
    private _addButtonToControlBar(): void {
       const controlBar = this._player.getChild(COMPONENT_NAMES.CONTROL_BAR);
 
       if (!controlBar) {
-         this.log.error(LOG_MESSAGES.CONTROL_BAR_NOT_FOUND);
+         this.log.error(`Control bar component not found. Cannot add ${this.strategy?.kind} manager button.`);
          return;
       }
 
       try {
-         const airPlayButton = new AirPlayButton(this._player, { addAirPlayLabelToButton: this._options.addAirPlayLabelToButton });
+         const fullscreenToggle = controlBar.getChild(COMPONENT_NAMES.FULLSCREEN_TOGGLE),
+               children = controlBar.children(),
+               fullscreenToggleIndex = fullscreenToggle ? children.indexOf(fullscreenToggle) : -1,
+               insertIndex = fullscreenToggleIndex >= 0 ? fullscreenToggleIndex : children.length,
+               button = this.strategy?.makeButton(this._options);
 
-         this.log(LOG_MESSAGES.BUTTON_CREATED);
-
-         const fullscreenToggle = controlBar.getChild(COMPONENT_NAMES.FULLSCREEN_TOGGLE);
-
-         if (fullscreenToggle) {
-            const children = controlBar.children(),
-                  fullscreenToggleIndex = children.indexOf(fullscreenToggle),
-                  insertIndex = fullscreenToggleIndex >= 0 ? fullscreenToggleIndex : children.length;
-
-            controlBar.addChild(airPlayButton, {}, insertIndex);
+         if (button) {
+            controlBar.addChild(button, {}, insertIndex);
+            this.log(`Added ${this.strategy?.kind} manager button to control bar at index ${insertIndex}.`);
          } else {
-            controlBar.addChild(airPlayButton);
-         }
-
-         this.log(LOG_MESSAGES.BUTTON_ADDED);
-      } catch(error) {
-         this.log.error('Failed to create or add AirPlay button', error);
-      }
-   }
-
-   private async _checkAvailability(): Promise<void> {
-      try {
-         const available = await this._airPlayManager.isAirPlayAvailable();
-
-         this.log('checking remote playback availability...', available);
-
-         if (available) {
-            this._player.trigger(EVENTS.REMOTE_PLAYBACK.AVAILABLE);
-         } else {
-            this._player.trigger(EVENTS.REMOTE_PLAYBACK.UNAVAILABLE);
+            this.log.error(`Failed to create ${this.strategy?.kind} button.`);
          }
       } catch(error) {
-         this.log.error('Error checking remote playback availability', error);
+         this.log.error(`Failed to add ${this.strategy?.kind} manager button to control bar,`, error);
       }
    }
 }

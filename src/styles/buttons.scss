@@ -1,0 +1,62 @@
+.vjs-remoteplayback-button {
+   --remoteplayback-icon--default: url('../assets/cast.svg');
+   --remoteplayback-icon--connected: url('../assets/cast-connected.svg');
+   .vjs-icon-placeholder {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      opacity: 1;
+      background-color: currentColor;
+      -webkit-mask: var(--remoteplayback-icon--default) center / contain no-repeat;
+      mask: var(--remoteplayback-icon--default) center / contain no-repeat;
+   }
+   &.connected {
+      .vjs-icon-placeholder {
+         -webkit-mask-image: var(--remoteplayback-icon--connected);
+         mask-image: var(--remoteplayback-icon--connected);
+      }
+   }
+   &.connecting {
+      .vjs-icon-placeholder {
+         animation: remoteplayback-icon-pulse 1s ease-in-out infinite alternate;
+      }
+   }
+   &:hover {
+      cursor: pointer;
+   }
+   &.airplay {
+      --remoteplayback-icon--default: url('../assets/airplay.svg');
+      --remoteplayback-icon--connected: url('../assets/airplay.svg');
+   }
+
+   // When label is NOT shown (default behavior), auto-size to fit icon
+   &:not(.vjs-remoteplayback-button-lg) {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      width: auto !important;
+      min-width: 3em;
+   }
+}
+
+.vjs-remoteplayback-button.vjs-remoteplayback-button-lg:not(.vjs-hidden) {
+   // Fits both the icon and the label on the same control
+   display: flex;
+   align-items: center;
+   width: auto;
+   padding: 0 4px;
+
+   .vjs-remoteplayback-button-label {
+      margin-left: 4px;
+      flex-grow: 1;
+   }
+}
+
+@keyframes remoteplayback-icon-pulse {
+   from {
+      opacity: 0.2;
+   }
+   to {
+      opacity: 0.8;
+   }
+}

@@ -1,14 +1,13 @@
 import type { VideoJs } from '../../@types/videojs';
 import { RemotePlaybackPlugin } from './RemotePlaybackPlugin';
-import '../styles/airplay.scss';
+import '../styles/index.scss';
 
 // Receives a video.js instance and registers the plugin
 export default function initializePlugin(videojs: VideoJs): void {
    videojs.registerPlugin('remotePlayback', RemotePlaybackPlugin);
-   videojs.log('Remote Playback plugin initialized');
+   videojs.log(`Remote Playback plugin registered with video.js version ${videojs.VERSION}.`);
 }
 
 export * from './RemotePlaybackPlugin';
-export * from './airplay/AirPlayButton';
-export * from './airplay/AirPlayManager';
-export type { RemotePlaybackPluginOptions } from '../../@types/remote-playback';
+export * from './strategies/AirPlayManager';
+export * from './strategies/RemotePlaybackManager';
