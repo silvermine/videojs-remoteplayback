@@ -1,0 +1,7 @@
+Chromecast
+remoteplayback
+silvermine
+unstub
+videojs
+webkitcurrentplaybacktargetiswirelesschanged
+webkitplaybacktargetavailabilitychanged

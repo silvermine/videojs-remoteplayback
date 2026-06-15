@@ -12,14 +12,17 @@ export default defineConfig({
       }),
    ],
    build: {
+      sourcemap: true,
       lib: {
          entry: 'src/js/index.ts',
          name: 'VideoJsRemotePlayback',
          fileName: 'videojs-remoteplayback',
+         formats: [ 'es', 'umd' ],
       },
       rollupOptions: {
          external: [ '@silvermine/video.js' ],
          output: {
+            exports: 'named',
             globals: {
                '@silvermine/video.js': 'videojs',
             },

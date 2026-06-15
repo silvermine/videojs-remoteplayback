@@ -14,24 +14,35 @@
       .video-container {
          margin: 20px 0;
       }
+      .actions {
+         margin-top: 12px;
+      }
+      .actions button {
+         padding: 8px 12px;
+         font-size: 14px;
+         cursor: pointer;
+      }
    </style>
 </head>
 <body>
    <div class="video-container">
       <video
-         id="airplay-test-player"
+         id="remoteplayback-test-player"
          class="video-js vjs-default-skin vjs-fluid"
          controls
          preload="auto"
          width="640"
          height="360"
          data-setup="{}">
-         <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+         <source src="https://ia801903.us.archive.org/32/items/BigBuckBunny_328/BigBuckBunny_512kb.mp4" type="video/mp4">
          <p class="vjs-no-js">
             To view this video please enable JavaScript, and consider upgrading to a web browser that
             <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>.
          </p>
       </video>
+      <div class="actions">
+         <button id="dispose-player-btn" type="button">Dispose Player</button>
+      </div>
    </div>
 
    <script type="module" src="./main.ts"></script>
