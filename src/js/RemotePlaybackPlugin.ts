@@ -2,6 +2,7 @@ import type { Button } from '@silvermine/video.js';
 import type { BaseButtonOptions } from './buttons/BaseButton';
 import type { VideoJsPlayer } from '../../@types/videojs';
 import videojs from '@silvermine/video.js';
+import EVENTS from './constants/events';
 import { AirPlayManager } from './strategies/AirPlayManager';
 import { RemotePlaybackManager } from './strategies/RemotePlaybackManager';
 import { checkClientSupportWithAirPlay, checkClientSupport } from './lib/check-client-support';
@@ -51,6 +52,18 @@ export class RemotePlaybackPlugin extends Plugin {
    private readonly _player: VideoJsPlayer;
    private readonly _options: RemotePlaybackPluginOptions;
    private _strategy: RemotePlaybackStrategy | undefined;
+   private readonly _listeners = {
+      [EVENTS.PROMPT_REQUESTED]: () => {
+         if (!this._strategy) {
+            this.log.error('No remote playback strategy available to handle prompt intent!');
+            return;
+         }
+
+         this._strategy.prompt().catch((error: Error) => {
+            this.log.error(error);
+         });
+      },
+   };
 
    public constructor(player: videojs.Player, options: Partial<RemotePlaybackPluginOptions> = {}) {
       super(player, options);
@@ -59,6 +72,9 @@ export class RemotePlaybackPlugin extends Plugin {
       // at this point.
       this._player = player as VideoJsPlayer;
       this._options = Object.assign({}, defaultOptions, options);
+      Object.entries(this._listeners).forEach(([ event, listener ]) => {
+         this._player.on(event, listener);
+      });
       this._player.ready(() => {
          if (this._options.preferNativeAirPlay && checkClientSupportWithAirPlay()) {
             this.log('Initializing with native AirPlay strategy.');
@@ -76,6 +92,9 @@ export class RemotePlaybackPlugin extends Plugin {
 
    public dispose(): void {
       this.log(`Disposing of ${this.strategy?.kind} strategy.`);
+      Object.entries(this._listeners).forEach(([ event, listener ]) => {
+         this._player.off(event, listener);
+      });
       this.strategy?.dispose();
       super.dispose();
    }

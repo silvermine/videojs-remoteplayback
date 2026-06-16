@@ -75,7 +75,7 @@ export class AirPlayManager implements RemotePlaybackStrategy {
 
    public makeButton(options: Partial<BaseButtonOptions> = {}): Button | undefined {
       if (checkClientSupportWithAirPlay()) {
-         return new AirPlayButton(this, options);
+         return new AirPlayButton(this._player, options);
       }
    }
 

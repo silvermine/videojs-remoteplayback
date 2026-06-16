@@ -2,7 +2,6 @@ import videojs from '@silvermine/video.js';
 import type { ComponentOptions } from '@silvermine/video.js';
 import type { VideoJsPlayer } from '../../../@types/videojs';
 import EVENTS from '../constants/events';
-import type { RemotePlaybackPlugin, RemotePlaybackStrategy } from '../RemotePlaybackPlugin';
 
 // INTERFACES
 
@@ -54,15 +53,13 @@ export class BaseButton extends Button {
    };
    private readonly _options: BaseButtonOptions;
    private readonly _player: VideoJsPlayer;
-   private readonly _manager: RemotePlaybackStrategy;
    private _labelEl?: HTMLSpanElement;
 
-   public constructor(manager: RemotePlaybackStrategy, options: Partial<BaseButtonOptions> = {}) {
-      super(manager.player, options);
+   public constructor(player: VideoJsPlayer, options: Partial<BaseButtonOptions> = {}) {
+      super(player, options);
 
       this._options = Object.assign({}, defaultButtonOptions, options);
-      this._manager = manager;
-      this._player = manager.player;
+      this._player = player;
 
       // Add label if configured to do so
       if (this._options.addLabelToButton) {
@@ -88,13 +85,7 @@ export class BaseButton extends Button {
    }
 
    public handleClick(): void {
-      if (!this._manager) {
-         this.plugin?.log.error('Manager not available');
-         return;
-      }
-      this._manager.prompt().catch((error: Error) => {
-         this.plugin?.log.error(error);
-      });
+      this._player.trigger(EVENTS.PROMPT_REQUESTED);
    }
 
    public dispose(): void {
@@ -102,10 +93,6 @@ export class BaseButton extends Button {
          this._player.off(event, listener);
       });
       super.dispose();
-   }
-
-   private get plugin(): RemotePlaybackPlugin | undefined {
-      return this._player.usingPlugin('remotePlayback') ? this._player.remotePlayback() : undefined;
    }
 
 }

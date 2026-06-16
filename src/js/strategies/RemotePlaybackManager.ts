@@ -52,9 +52,9 @@ export class RemotePlaybackManager implements RemotePlaybackStrategy {
       if (checkClientSupportWithAirPlay()) {
          // If AirPlay is available, we use that detection to use an AirPlay button just
          // to provide a different icon/label appearance.
-         return new AirPlayButton(this, options);
+         return new AirPlayButton(this._player, options);
       } else if (checkClientSupport()) {
-         return new BaseButton(this, options);
+         return new BaseButton(this._player, options);
       }
    }
 
