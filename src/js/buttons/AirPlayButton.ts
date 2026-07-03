@@ -1,4 +1,4 @@
-import type { RemotePlaybackStrategy } from '../RemotePlaybackPlugin';
+import type { VideoJsPlayer } from '../../../@types/videojs';
 import { BaseButton, BaseButtonOptions } from './BaseButton';
 
 // DEFAULTS
@@ -10,8 +10,8 @@ export const defaultAirPlayButtonOptions: BaseButtonOptions = {
 
 export class AirPlayButton extends BaseButton {
 
-   public constructor(manager: RemotePlaybackStrategy, options: Partial<BaseButtonOptions> = {}) {
-      super(manager, Object.assign({}, defaultAirPlayButtonOptions, options));
+   public constructor(player: VideoJsPlayer, options: Partial<BaseButtonOptions> = {}) {
+      super(player, Object.assign({}, defaultAirPlayButtonOptions, options));
    }
 
    public buildCSSClass(): string {

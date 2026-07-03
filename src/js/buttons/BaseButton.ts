@@ -2,7 +2,6 @@ import videojs from '@silvermine/video.js';
 import type { ComponentOptions } from '@silvermine/video.js';
 import type { VideoJsPlayer } from '../../../@types/videojs';
 import EVENTS from '../constants/events';
-import type { RemotePlaybackPlugin, RemotePlaybackStrategy } from '../RemotePlaybackPlugin';
 
 // INTERFACES
 
@@ -52,34 +51,27 @@ export class BaseButton extends Button {
          this.hide();
       },
    };
-   private readonly _options: BaseButtonOptions;
-   private readonly _player: VideoJsPlayer;
-   private readonly _manager: RemotePlaybackStrategy;
-   private _labelEl?: HTMLSpanElement;
 
-   public constructor(manager: RemotePlaybackStrategy, options: Partial<BaseButtonOptions> = {}) {
-      super(manager.player, options);
+   public constructor(player: VideoJsPlayer, options: Partial<BaseButtonOptions> = {}) {
+      const { addLabelToButton, label } = Object.assign({}, defaultButtonOptions, options);
 
-      this._options = Object.assign({}, defaultButtonOptions, options);
-      this._manager = manager;
-      this._player = manager.player;
+      super(player, options);
 
       // Add label if configured to do so
-      if (this._options.addLabelToButton) {
+      if (addLabelToButton) {
+         const labelEl = document.createElement('span');
+
+         labelEl.classList.add(CSS_CLASSES.BUTTON_LABEL);
+         labelEl.textContent = this.localize(label);
+         this.el().appendChild(labelEl);
          this.el().classList.add(CSS_CLASSES.BUTTON_LARGE);
-
-         this._labelEl = document.createElement('span');
-         this._labelEl.classList.add(CSS_CLASSES.BUTTON_LABEL);
-         this._labelEl.textContent = this._options.label;
-
-         this.el().appendChild(this._labelEl);
       } else {
-         this.controlText(this._options.label);
+         this.controlText(label);
       }
 
       // Add event listeners
       Object.entries(this._listeners).forEach(([ event, listener ]) => {
-         this._player.on(event, listener);
+         this.player().on(event, listener);
       });
    }
 
@@ -88,24 +80,14 @@ export class BaseButton extends Button {
    }
 
    public handleClick(): void {
-      if (!this._manager) {
-         this.plugin?.log.error('Manager not available');
-         return;
-      }
-      this._manager.prompt().catch((error: Error) => {
-         this.plugin?.log.error(error);
-      });
+      this.player().trigger(EVENTS.PROMPT_REQUESTED);
    }
 
    public dispose(): void {
       Object.entries(this._listeners).forEach(([ event, listener ]) => {
-         this._player.off(event, listener);
+         this.player().off(event, listener);
       });
       super.dispose();
-   }
-
-   private get plugin(): RemotePlaybackPlugin | undefined {
-      return this._player.usingPlugin('remotePlayback') ? this._player.remotePlayback() : undefined;
    }
 
 }
