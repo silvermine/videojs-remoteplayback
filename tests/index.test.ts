@@ -2,8 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import './mocks/video-js-mock';
 import videojs from '@silvermine/video.js';
 import initializePlugin from '../src/js';
-import { RemotePlaybackPlugin } from '../src/js/RemotePlaybackPlugin';
+import { COMPONENT_NAMES, RemotePlaybackPlugin } from '../src/js/RemotePlaybackPlugin';
 import EVENTS from '../src/js/constants/events';
+import { AirPlayButton } from '../src/js/buttons/AirPlayButton';
 import { BaseButton } from '../src/js/buttons/BaseButton';
 import { checkClientSupport, checkClientSupportWithAirPlay } from '../src/js/lib/check-client-support';
 import { VideoJsPlayer } from '../@types/videojs';
@@ -29,6 +30,18 @@ describe('Remote Playback Plugin', () => {
 
       expect(initFunction).not.toThrow();
       expect(videojs.registerPlugin).toHaveBeenCalled();
+   });
+
+   it('registers BaseButton when AirPlay is unavailable', () => {
+      vi.mocked(checkClientSupportWithAirPlay).mockReturnValue(false);
+      initializePlugin(videojs);
+      expect(videojs.registerComponent).toHaveBeenCalledWith(COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON, BaseButton);
+   });
+
+   it('registers AirPlayButton when AirPlay is available', () => {
+      vi.mocked(checkClientSupportWithAirPlay).mockReturnValue(true);
+      initializePlugin(videojs);
+      expect(videojs.registerComponent).toHaveBeenCalledWith(COMPONENT_NAMES.REMOTE_PLAYBACK_BUTTON, AirPlayButton);
    });
 
    it('routes prompt intent to the active strategy', async () => {
