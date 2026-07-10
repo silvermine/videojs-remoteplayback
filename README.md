@@ -50,6 +50,12 @@ Install it with `npm install @silvermine/videojs-remoteplayback`. Ensure its pee
 dependencies are installed, namely, [Video.js][videojs]. Configure it according to the
 configuration instructions below.
 
+To use the CSS used by the plugin, be sure to import it into your project like this:
+
+```js
+import '@silvermine/videojs-remoteplayback/styles.css';
+```
+
 ### Configuration
 
 Once the plugin has been loaded and registered, add it to your Video.js player using
