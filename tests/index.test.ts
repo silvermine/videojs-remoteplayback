@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import './mocks/video-js-mock';
 import videojs from 'video.js';
 import initializePlugin from '../src/js';
-import { RemotePlaybackPlugin } from '../src/js/RemotePlaybackPlugin';
+import { createButtonConstructor } from '../src/js/buttons';
+import type { RemotePlaybackPlugin } from '../src/js/RemotePlaybackPlugin';
+import { createRemotePlaybackPluginConstructor } from '../src/js/RemotePlaybackPlugin';
 import EVENTS from '../src/js/constants/events';
-import { BaseButton } from '../src/js/buttons/BaseButton';
 import { checkClientSupport, checkClientSupportWithAirPlay } from '../src/js/lib/check-client-support';
-import { VideoJsPlayer } from '../@types/videojs';
+import type { VideoJs, VideoJsPlayer } from '../@types/videojs';
 
 vi.mock('../src/js/lib/check-client-support', () => {
    return {
@@ -71,7 +72,11 @@ describe('Remote Playback Plugin', () => {
          usingPlugin: vi.fn().mockReturnValue(true),
       } as unknown as VideoJsPlayer;
 
-      plugin = new RemotePlaybackPlugin(player, { addButtonToControlBar: false });
+      const RemotePlaybackPluginConstructor = createRemotePlaybackPluginConstructor(videojs);
+
+      // We safely assert that this is `RemotePlaybackPlugin` here since TS just doesn't
+      // realize that this is a RemotePlaybackPlugin, and not just a generic `Plugin`.
+      plugin = new RemotePlaybackPluginConstructor(player, { addButtonToControlBar: false }) as RemotePlaybackPlugin;
 
       expect(player.on).toHaveBeenCalledWith(EVENTS.PROMPT_REQUESTED, expect.any(Function));
       expect(plugin.strategy).toBeDefined();
@@ -80,9 +85,11 @@ describe('Remote Playback Plugin', () => {
       }
 
       const promptSpy = vi.spyOn(plugin.strategy, 'prompt').mockResolvedValue(undefined),
-            button = new BaseButton(player);
+            RemotePlaybackButton = createButtonConstructor(videojs),
+            mockEvent = {} as videojs.EventTarget.Event,
+            button = new RemotePlaybackButton(player);
 
-      button.handleClick();
+      button.handleClick(mockEvent);
 
       expect(player.trigger).toHaveBeenCalledWith(EVENTS.PROMPT_REQUESTED);
       expect(promptSpy).toHaveBeenCalledTimes(1);
