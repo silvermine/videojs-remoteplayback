@@ -46,9 +46,22 @@ provides AirPlay/casting icons embedded in the CSS.
 
 ### Building in your own project
 
-Install it with `npm install @silvermine/videojs-remoteplayback`. Ensure its peer
-dependencies are installed, namely, [Video.js][videojs]. Configure it according to the
+Install it with `npm install @silvermine/videojs-remoteplayback`. Projects using the
+standard library should also install [Video.js][videojs]. Configure it according to the
 configuration instructions below.
+
+Register the plugin with the same Video.js instance used to create the player. Here is an
+example of how to register it:
+
+```js
+import videojs from 'video.js';
+import initializeRemotePlayback from '@silvermine/videojs-remoteplayback';
+
+initializeRemotePlayback(videojs);
+```
+
+As you see in the example, the package does not import the Video.js runtime itself. So,
+your instance of [Video.js][videojs] must be passed into the plugin to register it.
 
 To use the CSS used by the plugin, be sure to import it into your project like this:
 
