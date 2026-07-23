@@ -1,4 +1,4 @@
-import videojs from 'video.js';
+import type videojs from 'video.js';
 import type { VideoJsPlayer } from '../../../@types/videojs';
 import EVENTS from '../constants/events';
 
