@@ -20,12 +20,8 @@ export default defineConfig({
          formats: [ 'es', 'umd' ],
       },
       rollupOptions: {
-         external: [ '@silvermine/video.js' ],
          output: {
             exports: 'named',
-            globals: {
-               '@silvermine/video.js': 'videojs',
-            },
             assetFileNames: 'videojs-remoteplayback.css',
          },
       },
