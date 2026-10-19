@@ -1,6 +1,6 @@
 {
    "name": "@silvermine/videojs-remoteplayback",
-   "version": "0.0.1",
+   "version": "0.1.0",
    "description": "videojs plugin for casting to chromecast and airplay",
    "main": "dist/videojs-remoteplayback.umd.js",
    "module": "dist/videojs-remoteplayback.mjs",
