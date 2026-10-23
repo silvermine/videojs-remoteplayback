@@ -20,7 +20,7 @@
       "build": "vite build",
       "dev": "vite --config vite.dev.config.ts",
       "test": "vitest run",
-      "check-node-version": "check-node-version --node 24.14.1 --npm 11.11.0 --print",
+      "check-node-version": "check-node-version --node 24.19.0 --npm 11.17.0 --print",
       "stylelint": "stylelint './src/styles/**/*.scss'",
       "commitlint": "commitlint --from 793bcc7",
       "eslint": "eslint .",
