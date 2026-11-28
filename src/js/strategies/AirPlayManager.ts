@@ -1,7 +1,7 @@
 import type { VideoJsPlayer } from '../../../@types/videojs';
 import EVENTS from '../constants/events';
 import type { RemotePlaybackPlugin, RemotePlaybackStrategy } from '../RemotePlaybackPlugin';
-import { getVideoElementWithAirPlay, HTMLVideoElementWithAirPlay } from '../lib/get-video-element';
+import { getMediaElementWithAirPlay, HTMLMediaElementWithAirPlay } from '../lib/get-media-element';
 import { checkClientSupportWithAirPlay } from '../lib/check-client-support';
 
 interface RemotePlaybackAvailabilityEvent extends Event {
@@ -20,67 +20,65 @@ export class AirPlayManager implements RemotePlaybackStrategy {
    private readonly _listeners = {
       'webkitplaybacktargetavailabilitychanged': (event: Event) => {
          if (!isRemotePlaybackAvailabilityEvent(event)) {
-            this.plugin?.log.error('Received unexpected event type:', event);
+            this.plugin?.log.warn('Received unexpected event type:', event);
             return;
          }
 
-         this.plugin?.log('AirPlay availability changed:', event.availability);
-         if (event.availability === 'available') {
-            this._player.trigger(EVENTS.AVAILABLE);
-         } else {
-            this._player.trigger(EVENTS.UNAVAILABLE);
-         }
+         this.plugin?.log.debug('AirPlay availability changed:', event.availability);
+         this._isAvailable = event.availability === 'available';
+         this._player.trigger(this._isAvailable ? EVENTS.AVAILABLE : EVENTS.UNAVAILABLE);
       },
       'webkitcurrentplaybacktargetiswirelesschanged': () => {
-         this.plugin?.log('AirPlay playback target changed. Is wireless:', this._videoElement?.webkitCurrentPlaybackTargetIsWireless);
-         if (this._videoElement?.webkitCurrentPlaybackTargetIsWireless) {
-            this._player.trigger(EVENTS.CONNECTED);
-         } else {
-            this._player.trigger(EVENTS.DISCONNECTED);
-         }
+         this.plugin?.log.debug('AirPlay playback target changed. Is wireless:', this._mediaElement?.webkitCurrentPlaybackTargetIsWireless);
+         this._player.trigger(this._mediaElement?.webkitCurrentPlaybackTargetIsWireless ? EVENTS.CONNECTED : EVENTS.DISCONNECTED);
       },
    };
    private readonly _player: VideoJsPlayer;
-   private _videoElement: HTMLVideoElementWithAirPlay | null = null;
+   private _mediaElement: HTMLMediaElementWithAirPlay | null = null;
+   private _isAvailable = false;
 
    public constructor(player: VideoJsPlayer) {
       this._player = player;
 
       // Only proceed if the browser supports native AirPlay
       if (!checkClientSupportWithAirPlay()) {
-         this.plugin?.log.error('Native AirPlay not supported!');
+         this.plugin?.log.warn('Native AirPlay not supported!');
          return;
       }
 
-      // Get the video element
-      const videoElement = getVideoElementWithAirPlay(this._player);
+      // Get the media element
+      const mediaElement = getMediaElementWithAirPlay(this._player);
 
-      if (!videoElement) {
-         this.plugin?.log.error('Video element with AirPlay support not found.');
+      if (!mediaElement) {
+         this.plugin?.log.error('Media element with AirPlay support not found.');
          return;
       }
 
       // Only after all checks do we hold a reference to element and set up listeners
-      this._videoElement = videoElement;
+      this._mediaElement = mediaElement;
       this._setupEventListeners();
-      this.plugin?.log('Native AirPlay strategy initialization successful.');
+      this.plugin?.log.debug('Native AirPlay strategy initialization successful.');
    }
 
    public get player(): VideoJsPlayer {
       return this._player;
    }
 
+   public get isAvailable(): boolean {
+      return this._isAvailable;
+   }
+
    /**
     * Open the AirPlay device picker for the current media element.
     */
    public async prompt(): Promise<void> {
-      if (!this._videoElement) {
-         this.plugin?.log.error('No video element with AirPlay support was captured during initialization!');
+      if (!this._mediaElement) {
+         this.plugin?.log.error('No media element with AirPlay support was captured during initialization!');
          return;
       }
       try {
-         this._videoElement.webkitShowPlaybackTargetPicker();
-         this.plugin?.log('Native AirPlay device picker opened.');
+         this._mediaElement.webkitShowPlaybackTargetPicker();
+         this.plugin?.log.debug('Native AirPlay device picker opened.');
       } catch(error) {
          this.plugin?.log.error('Failed to open AirPlay device picker!', error);
       }
@@ -91,9 +89,9 @@ export class AirPlayManager implements RemotePlaybackStrategy {
     */
    public dispose(): void {
       Object.entries(this._listeners).forEach(([ event, listener ]) => {
-         this._videoElement?.removeEventListener(event, listener);
+         this._mediaElement?.removeEventListener(event, listener);
       });
-      this._videoElement = null;
+      this._mediaElement = null;
    }
 
    private get plugin(): RemotePlaybackPlugin | undefined {
@@ -106,12 +104,12 @@ export class AirPlayManager implements RemotePlaybackStrategy {
     * respond to events.
     */
    private _setupEventListeners(): void {
-      if (!this._videoElement) {
+      if (!this._mediaElement) {
          return;
       }
 
       Object.entries(this._listeners).forEach(([ event, listener ]) => {
-         this._videoElement?.addEventListener(event, listener);
+         this._mediaElement?.addEventListener(event, listener);
       });
    }
 

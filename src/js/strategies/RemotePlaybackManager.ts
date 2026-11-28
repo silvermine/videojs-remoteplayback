@@ -1,7 +1,7 @@
 import type { VideoJsPlayer } from '../../../@types/videojs';
 import EVENTS from '../constants/events';
-import { RemotePlaybackPlugin, RemotePlaybackStrategy } from '../RemotePlaybackPlugin';
-import { getVideoElement } from '../lib/get-video-element';
+import type { RemotePlaybackPlugin, RemotePlaybackStrategy } from '../RemotePlaybackPlugin';
+import { getMediaElement } from '../lib/get-media-element';
 import { checkClientSupport } from '../lib/check-client-support';
 
 /**
@@ -17,32 +17,37 @@ export class RemotePlaybackManager implements RemotePlaybackStrategy {
    private readonly _player: VideoJsPlayer;
    private _remotePlayback: RemotePlayback | null = null;
    private _availabilityWatchId: number | null = null;
+   private _isAvailable = false;
 
    public constructor(player: VideoJsPlayer) {
       this._player = player;
 
       // Only proceed if the browser supports the Remote Playback API
       if (!checkClientSupport()) {
-         this.plugin?.log.error('Remote Playback API not supported!');
+         this.plugin?.log.warn('Remote Playback API not supported!');
          return;
       }
 
-      // Get the video element
-      const videoElement = getVideoElement(this._player);
+      // Get the media element
+      const mediaElement = getMediaElement(this._player);
 
-      if (!videoElement) {
-         this.plugin?.log.error('Video element not found!');
+      if (!mediaElement) {
+         this.plugin?.log.error('Media element with Remote Playback API support not found!');
          return;
       }
 
       // Only after all checks do we hold a reference to the Remote Playback API
-      this._remotePlayback = videoElement.remote || null;
+      this._remotePlayback = mediaElement.remote || null;
       this._setupEventListeners();
-      this.plugin?.log('Remote Playback API strategy initialization successful.');
+      this.plugin?.log.debug('Remote Playback API strategy initialization successful.');
    }
 
    public get player(): VideoJsPlayer {
       return this._player;
+   }
+
+   public get isAvailable(): boolean {
+      return this._isAvailable;
    }
 
    /**
@@ -55,7 +60,7 @@ export class RemotePlaybackManager implements RemotePlaybackStrategy {
       }
       try {
          await this._remotePlayback.prompt();
-         this.plugin?.log('Device picker opened.');
+         this.plugin?.log.debug('Device picker opened.');
       } catch(error) {
          this.plugin?.log.error('Failed to open device picker!', error);
       }
@@ -92,11 +97,17 @@ export class RemotePlaybackManager implements RemotePlaybackStrategy {
 
       this._remotePlayback
          .watchAvailability((available: boolean): void => {
-            this.plugin?.log('Availability changed:', available);
+            // A race condition could exist if this fired before disposal completes.
+            // So, check Remote Playback API is still available before proceeding.
+            if (!this._remotePlayback) {
+               return;
+            }
+            this.plugin?.log.debug('Availability changed:', available);
+            this._isAvailable = available;
             this._player.trigger(available ? EVENTS.AVAILABLE : EVENTS.UNAVAILABLE);
          })
          .then((id) => {
-            this.plugin?.log('Started watching availability with ID:', id);
+            this.plugin?.log.debug('Started watching availability with ID:', id);
             this._availabilityWatchId = id;
          })
          .catch((error: DOMException) => {

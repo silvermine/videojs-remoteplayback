@@ -2,15 +2,16 @@
 
 ## What
 
-A [Video.js][videojs] plugin that enables remote playback capabilities for casting video
-content to Chromecast and AirPlay devices using [Remote Playback API][remoteplaybackapi].
+A [Video.js][videojs] plugin that enables remote playback capabilities for casting audio
+and video content to Chromecast and AirPlay devices using
+[Remote Playback API][remoteplaybackapi].
 
 ## Why
 
-Modern users expect seamless video experiences across all their devices. Whether they're
-watching on a laptop and want to cast to their TV via Chromecast or Google TV Streamer, or
-streaming from an iPhone to an Apple TV using AirPlay, remote playback has become an
-essential feature for video applications.
+Modern users expect seamless media experiences across all their devices. Whether they're
+watching on a laptop and want to cast to their TV via Chromecast or Google TV Streamer,
+streaming from an iPhone to an Apple TV using AirPlay, or streaming audio to a wireless
+speaker, remote playback has become an essential feature for audio/video applications.
 
 While Video.js provides excellent video playback capabilities, it lacks built-in support
 for casting to external devices. This plugin bridges that gap with the native
@@ -50,6 +51,82 @@ Install it with `npm install @silvermine/videojs-remoteplayback`. Ensure its pee
 dependencies are installed, namely, [Video.js][videojs]. Configure it according to the
 configuration instructions below.
 
+If you're using TypeScript, also install `@types/video.js`, since Video.js 7 does not ship
+its own type declarations. This is listed as an optional peer dependency since not all
+projects use TypeScript. You can add it with `npm install --save-dev @types/video.js` (or
+an equivalent command for your package manager).
+
+To use the CSS used by the plugin, be sure to import it into your project like this:
+
+```js
+import '@silvermine/videojs-remoteplayback/styles.css';
+```
+
+### Using a forked video.js build
+
+This plugin expects a `video.js` implementation that is compatible with Video.js >=7.3.0
+and <8.0.0. If desired, this could be a forked version of video.js.
+
+The plugin will use the instance of video.js that you pass into `initializePlugin`.
+
+If your fork is imported using the module specifier `video.js`, you can install
+`@types/video.js` and use those declarations, provided the fork's API remains compatible.
+If the fork uses a different module specifier and does not provide its own declarations,
+you can add a declaration file that aliases it to the Video.js types, like this:
+
+```ts
+declare module 'your-forked-video.js' {
+   import videojs from 'video.js';
+   export = videojs;
+}
+```
+
+### Initializing the plugin (full examples)
+
+With typical ESM, your initialization of the plugin may look something like the example
+below. Remember, if you're using TypeScript, install `@types/video.js` alongside
+`video.js`, as described above.
+
+```ts
+import videojs from 'video.js';
+import initializePlugin, { isPlayerWithRemotePlaybackPlugin } from '@silvermine/videojs-remoteplayback';
+import 'video.js/dist/video-js.css';
+import '@silvermine/videojs-remoteplayback/styles.css';
+
+initializePlugin(videojs);
+
+const player = videojs('your-video-name');
+
+if (isPlayerWithRemotePlaybackPlugin(player)) {
+   player.remotePlayback();
+} else {
+   videojs.log.error('Failed to startup Remote Playback plugin.');
+}
+```
+
+Using UMD, your initialization of the plugin may have these script tags at the bottom of
+your HTML:
+
+```html
+<link
+   rel="stylesheet"
+   href="https://cdn.jsdelivr.net/npm/video.js@7.21.7/dist/video-js.min.css"
+   integrity="sha384-m/+gruJNOZgxOA44GgPxiXxSBPKfJTu36EVTc8fYIVPKd6V8pBhUoCHx/Zl71xQL"
+   crossorigin="anonymous" />
+<script
+   src="https://cdn.jsdelivr.net/npm/video.js@7.21.7/dist/video.min.js"
+   integrity="sha384-Y3EQVQUuP3pM9Mj1YjwJhLxImXD5UIFtZVttZR+PnnpTUsGwZ95wwEq818s1Yc68"
+   crossorigin="anonymous">
+</script>
+<script src="path/to/videojs-remoteplayback.umd.js"></script>
+<link rel="stylesheet" href="path/to/videojs-remoteplayback.css">
+<script>
+   VideoJsRemotePlayback.default(videojs);
+   const player = videojs('remoteplayback-test-player');
+   player.remotePlayback();
+</script>
+```
+
 ### Configuration
 
 Once the plugin has been loaded and registered, add it to your Video.js player using
@@ -62,6 +139,9 @@ on the Video.js docs). Use these options to configure the plugin:
    * **`plugins.remotePlayback.preferNativeAirPlay`**: A `boolean` that will use native
      AirPlay APIs when AirPlay is available, instead of Remote Playback API.
      Default: `false`.
+   * **`plugins.remotePlayback.logLevel`**: A Video.js log level for this plugin's own
+     logger: `all`, `off`, `debug`, `info`, `warn`, or `error`. This is independent of the
+     global Video.js log level. Default: `error`.
    * **`plugins.remotePlayback.addLabelToButton`**: A `boolean` that indicates whether to
      add a text label next to the button icon.
      Default: `true`.
@@ -70,6 +150,9 @@ on the Video.js docs). Use these options to configure the plugin:
      "AirPlay". If you customize this label, it will use the same label for any instance.
      So, if you want different behavior based on presence of AirPlay or not, you will need
      to handle that logic.
+
+The button starts hidden and appears only when remote playback availability is confirmed.
+If the browser cannot monitor availability, the button remains hidden.
 
 ## How do I contribute?
 

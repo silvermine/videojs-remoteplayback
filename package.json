@@ -1,6 +1,6 @@
 {
    "name": "@silvermine/videojs-remoteplayback",
-   "version": "0.0.1",
+   "version": "0.1.0",
    "description": "videojs plugin for casting to chromecast and airplay",
    "main": "dist/videojs-remoteplayback.umd.js",
    "module": "dist/videojs-remoteplayback.mjs",
@@ -11,7 +11,7 @@
          "import": "./dist/videojs-remoteplayback.mjs",
          "require": "./dist/videojs-remoteplayback.umd.js"
       },
-      "./dist/videojs-remoteplayback.css": "./dist/videojs-remoteplayback.css"
+      "./styles.css": "./dist/videojs-remoteplayback.css"
    },
    "files": [
       "dist/"
@@ -20,7 +20,7 @@
       "build": "vite build",
       "dev": "vite --config vite.dev.config.ts",
       "test": "vitest run",
-      "check-node-version": "check-node-version --node 24.19.0 --npm 11.17.0 --print",
+      "check-node-version": "check-node-version --node 24.22.3 --npm 11.19.1 --print",
       "stylelint": "stylelint './src/styles/**/*.scss'",
       "commitlint": "commitlint --from 793bcc7",
       "eslint": "eslint .",
@@ -65,6 +65,12 @@
       "vitest": "3.2.4"
    },
    "peerDependencies": {
-      "@silvermine/video.js": "7.19.0-1"
+      "video.js": ">=7.3.0 <8.0.0",
+      "@types/video.js": ">=7.3.57 <8.0.0"
+   },
+   "peerDependenciesMeta": {
+      "@types/video.js": {
+         "optional": true
+      }
    }
 }

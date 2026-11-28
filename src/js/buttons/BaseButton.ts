@@ -1,11 +1,12 @@
-import videojs from '@silvermine/video.js';
-import type { ComponentOptions } from '@silvermine/video.js';
-import type { VideoJsPlayer } from '../../../@types/videojs';
+import type videojs from 'video.js';
+import type { VideoJs } from '../../../@types/videojs';
+import type { RemotePlaybackButtonConstructor } from './index';
 import EVENTS from '../constants/events';
+import { isPlayerWithRemotePlaybackPlugin } from '../RemotePlaybackPlugin';
 
 // INTERFACES
 
-export interface BaseButtonOptions extends ComponentOptions {
+export interface BaseButtonOptions extends videojs.ComponentOptions {
    addLabelToButton: boolean;
    label: string;
 }
@@ -26,68 +27,82 @@ const CSS_CLASSES = {
    CONNECTED: 'connected',
    CONNECTING: 'connecting',
    ICON_PLACEHOLDER: 'vjs-icon-placeholder',
+   VJS_HIDDEN: 'vjs-hidden',
 } as const;
 
-const Button = videojs.getComponent('Button');
+/**
+ * Factory function that creates a button constructor for a base button.
+ */
+export function createBaseButtonConstructor(videojs: VideoJs): RemotePlaybackButtonConstructor {
+   const Button = videojs.getComponent('Button');
 
-export class BaseButton extends Button {
-   private readonly _listeners = {
-      [EVENTS.CONNECTING]: () => {
-         this.removeClass(CSS_CLASSES.CONNECTED);
-         this.addClass(CSS_CLASSES.CONNECTING);
-      },
-      [EVENTS.CONNECTED]: () => {
-         this.removeClass(CSS_CLASSES.CONNECTING);
-         this.addClass(CSS_CLASSES.CONNECTED);
-      },
-      [EVENTS.DISCONNECTED]: () => {
-         this.removeClass(CSS_CLASSES.CONNECTING);
-         this.removeClass(CSS_CLASSES.CONNECTED);
-      },
-      [EVENTS.AVAILABLE]: () => {
-         this.show();
-      },
-      [EVENTS.UNAVAILABLE]: () => {
-         this.hide();
-      },
-   };
+   return class extends Button {
+      private readonly _listeners = {
+         [EVENTS.CONNECTING]: () => {
+            this.removeClass(CSS_CLASSES.CONNECTED);
+            this.addClass(CSS_CLASSES.CONNECTING);
+         },
+         [EVENTS.CONNECTED]: () => {
+            this.removeClass(CSS_CLASSES.CONNECTING);
+            this.addClass(CSS_CLASSES.CONNECTED);
+         },
+         [EVENTS.DISCONNECTED]: () => {
+            this.removeClass(CSS_CLASSES.CONNECTING);
+            this.removeClass(CSS_CLASSES.CONNECTED);
+         },
+         [EVENTS.AVAILABLE]: () => {
+            this.show();
+         },
+         [EVENTS.UNAVAILABLE]: () => {
+            this.hide();
+         },
+      };
 
-   public constructor(player: VideoJsPlayer, options: Partial<BaseButtonOptions> = {}) {
-      const { addLabelToButton, label } = Object.assign({}, defaultButtonOptions, options);
+      public constructor(player: videojs.Player, options: Partial<BaseButtonOptions> = {}) {
+         const { addLabelToButton, label } = Object.assign({}, defaultButtonOptions, options);
 
-      super(player, options);
+         super(player, options);
 
-      // Add label if configured to do so
-      if (addLabelToButton) {
-         const labelEl = document.createElement('span');
+         // Add label if configured to do so
+         if (addLabelToButton) {
+            const labelEl = document.createElement('span');
 
-         labelEl.classList.add(CSS_CLASSES.BUTTON_LABEL);
-         labelEl.textContent = this.localize(label);
-         this.el().appendChild(labelEl);
-         this.el().classList.add(CSS_CLASSES.BUTTON_LARGE);
-      } else {
-         this.controlText(label);
+            labelEl.classList.add(CSS_CLASSES.BUTTON_LABEL);
+            labelEl.textContent = this.localize(label);
+            this.el().appendChild(labelEl);
+            this.el().classList.add(CSS_CLASSES.BUTTON_LARGE);
+         } else {
+            this.controlText(label);
+         }
+
+         // Add event listeners
+         Object.entries(this._listeners).forEach(([ event, listener ]) => {
+            this.player().on(event, listener);
+         });
+
+         // If the button was created after the plugin was initialized and/or availability
+         // has already been determined, we want to explicitly show the button. Otherwise,
+         // the button will stay hidden until the next availability change event.
+         if (isPlayerWithRemotePlaybackPlugin(player) && player.usingPlugin('remotePlayback')) {
+            if (player.remotePlayback().strategy?.isAvailable) {
+               this.show();
+            }
+         }
       }
 
-      // Add event listeners
-      Object.entries(this._listeners).forEach(([ event, listener ]) => {
-         this.player().on(event, listener);
-      });
-   }
+      public buildCSSClass(): string {
+         return `${CSS_CLASSES.BUTTON} ${CSS_CLASSES.VJS_HIDDEN} ${super.buildCSSClass()}`;
+      }
 
-   public buildCSSClass(): string {
-      return `${CSS_CLASSES.BUTTON} ${super.buildCSSClass()}`;
-   }
+      public handleClick(): void {
+         this.player().trigger(EVENTS.PROMPT_REQUESTED);
+      }
 
-   public handleClick(): void {
-      this.player().trigger(EVENTS.PROMPT_REQUESTED);
-   }
-
-   public dispose(): void {
-      Object.entries(this._listeners).forEach(([ event, listener ]) => {
-         this.player().off(event, listener);
-      });
-      super.dispose();
-   }
-
+      public dispose(): void {
+         Object.entries(this._listeners).forEach(([ event, listener ]) => {
+            this.player().off(event, listener);
+         });
+         super.dispose();
+      }
+   };
 }
