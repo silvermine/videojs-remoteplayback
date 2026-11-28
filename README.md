@@ -64,8 +64,8 @@ import '@silvermine/videojs-remoteplayback/styles.css';
 
 ### Using a forked video.js build
 
-This plugin expects a `video.js` implementation that is compatible with Video.js 7.x. If
-desired, this could be a forked version of video.js.
+This plugin expects a `video.js` implementation that is compatible with Video.js >=7.3.0
+and <8.0.0. If desired, this could be a forked version of video.js.
 
 The plugin will use the instance of video.js that you pass into `initializePlugin`.
 
@@ -139,6 +139,9 @@ on the Video.js docs). Use these options to configure the plugin:
    * **`plugins.remotePlayback.preferNativeAirPlay`**: A `boolean` that will use native
      AirPlay APIs when AirPlay is available, instead of Remote Playback API.
      Default: `false`.
+   * **`plugins.remotePlayback.logLevel`**: A Video.js log level for this plugin's own
+     logger: `all`, `off`, `debug`, `info`, `warn`, or `error`. This is independent of the
+     global Video.js log level. Default: `error`.
    * **`plugins.remotePlayback.addLabelToButton`**: A `boolean` that indicates whether to
      add a text label next to the button icon.
      Default: `true`.
@@ -147,6 +150,9 @@ on the Video.js docs). Use these options to configure the plugin:
      "AirPlay". If you customize this label, it will use the same label for any instance.
      So, if you want different behavior based on presence of AirPlay or not, you will need
      to handle that logic.
+
+The button starts hidden and appears only when remote playback availability is confirmed.
+If the browser cannot monitor availability, the button remains hidden.
 
 ## How do I contribute?
 
